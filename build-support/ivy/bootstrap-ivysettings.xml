@@ -1,0 +1,13 @@
+<?xml version="1.0"?>
+
+<ivysettings>
+ <caches defaultCacheDir="${user.home}/.ivy2/pants/"/>
+
+  <resolvers>
+    <chain name="bootstrap-aiq-resolver-chain" returnFirst="true">
+      <ibiblio name="boot-maven-central" m2compatible="true" descriptor="required" usepoms="true"/>
+    </chain>
+  </resolvers>
+
+  <settings defaultResolver="bootstrap-aiq-resolver-chain"/>
+</ivysettings>
