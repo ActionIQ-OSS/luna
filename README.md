@@ -95,7 +95,7 @@ Check out [test example](test/scala/co/actioniq/luna/example)
 ## Recommendations ##
 Generally, it is a good idea to make some base DAOModel and DAOTable classes that you can reuse everywhere so
 that you don't need to remember what to mix in.  So you might make
-```
+```scala
   trait BaseModel extends MySQLIdModel[DbUUID]
   abstract class BaseTable[V <: BaseModel](
     tag: Tag,
@@ -112,7 +112,7 @@ that you don't need to remember what to mix in.  So you might make
 ### Transaction Logging ###
 DAOs have hooks after any CREATE, UPDATE, or DELETE operation is ran.  These can be used to call the "write" method
 on your implementation of a TransactionLogger that gets attached to the DB instance variable.  For example:
-```
+```scala
   override protected def addCreateTransaction(id: DbUUID, input: Player): Unit =
     db.transactionLogger.write(LoggingModel(TransactionAction.create, id, input.name))
 ```
