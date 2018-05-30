@@ -15,5 +15,5 @@ cache:
     - $HOME/.ivy2
 
 script:
- - ./pants test ::
+ - "./pants test ::"
 
