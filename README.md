@@ -1,4 +1,5 @@
 # Luna #
+[![Build Status](https://travis-ci.org/ActionIQ-OSS/luna.svg?branch=master)](https://travis-ci.org/ActionIQ-OSS/luna)
 Luna makes Slick DAOs simple
 ## Introduction ##
 So I hear you want to interact with a database and you already use Slick or may want to use Slick.
