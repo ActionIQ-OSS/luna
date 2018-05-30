@@ -1,0 +1,19 @@
+language: scala
+scala:
+  - 2.11.8
+jdk:
+  - oraclejdk8
+git:
+  submodules: false
+
+dist: trusty
+
+cache:
+  timeout: 1000 # sec
+  directories:
+    - $HOME/.cache
+    - $HOME/.ivy2
+
+script:
+ - ./pants test ::
+
