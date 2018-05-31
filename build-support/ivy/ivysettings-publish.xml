@@ -15,7 +15,7 @@
       <!-- Local resolver that points back to the global cache -->
       <filesystem name="local" m2compatible="true" local="true" transactional="false">
         <ivy pattern="/tmp/boops/[organisation]/[module]/[revision]/[module]-[revision].[ext]" />
-        <artifact pattern="/tmp/boops/[organisation]/[module]/[revision]/[module]-[revision].[ext]" />
+        <artifact pattern="/tmp/boops/[organisation]/[module]/[revision]/ivy/[module]-[revision].[ext]" />
       </filesystem>
     </chain>
   </resolvers>
