@@ -29,7 +29,6 @@
   </resolvers>
   <signers>
     <pgp name="pgp"
-         secring=""
          keyId="${pgp.keyid}"
          password="${pgp.password}"/>
   </signers>
