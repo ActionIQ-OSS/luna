@@ -7,8 +7,7 @@
   <!-- For all resolvers, dont try to check for modified files, and never expire cache -->
   <property name="ivy.resolver.default.check.modified" value="false" />
   <property name="ivy.cache.ttl.default" value="eternal" />
-
-   <!-- Ivy S3 library that we hacked up - https://github.com/ActionIQ-OSS/s3-ivy-resolver -->
+  <settings defaultResolver="pants-chain-repos"/>
 
   <resolvers>
     <chain name="pants-chain-repos" returnFirst="true">
