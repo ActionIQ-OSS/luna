@@ -15,8 +15,8 @@
       <ibiblio name="maven-central" m2compatible="true" descriptor="required"/>
       <!-- Local resolver that points back to the global cache -->
       <filesystem name="local" m2compatible="true">
-        <ivy pattern="${user.home}/.ivy2/pants/[organisation]/[module]/ivy-[revision].[ext]" />
-        <artifact pattern="${user.home}/.ivy2/pants/[organisation]/[module]/jars/[module]-[revision].[ext]" />
+        <ivy pattern="${user.home}/.m2/repository/[organisation]/[module]/ivy-[revision].[ext]" />
+        <artifact pattern="${user.home}/.ivy2/repository/[organisation]/[module]/jars/[module]-[revision].[ext]" />
       </filesystem>
     </chain>
   </resolvers>
