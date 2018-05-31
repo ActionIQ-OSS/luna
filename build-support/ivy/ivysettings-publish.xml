@@ -9,7 +9,7 @@
   <property name="ivy.cache.ttl.default" value="eternal" />
   <properties file="${user.home}/.config/pgp.properties"/>
   <property name="pgp.keyid" value="auto" override="false"/>
-  <property name="pgp.secring" value=="${user.home}/.gnupg/pubring.kbx" override="true"/>
+  <property name="pgp.pubring" value="${user.home}/.gnupg/pubring.kbx" override="true"/>
 
   <credentials host="oss.sonatype.org"
                realm="Sonatype Nexus Repository Manager"
@@ -30,7 +30,7 @@
   <signers>
     <pgp name="pgp"
          keyId="${pgp.keyid}"
-         secring="${pgp.secring}"
+         defaultKeyring="false"
          password="${pgp.password}"/>
   </signers>
 
