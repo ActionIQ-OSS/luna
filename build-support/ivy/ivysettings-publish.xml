@@ -24,11 +24,11 @@
     <ibiblio name="oss.sonatype.org"
              m2compatible="true"
              root="https://oss.sonatype.org/service/local/staging/deploy/maven2/"
-             signer="pgp"/>
+             signer="gpg"/>
       
   </resolvers>
   <signers>
-    <pgp name="pgp"
+    <gpg name="gpg"
          keyId="${pgp.keyid}"
          defaultKeyring="false"
          password="${pgp.password}"/>
