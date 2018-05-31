@@ -13,7 +13,7 @@
     <chain name="pants-chain-repos" returnFirst="true">
       <ibiblio name="maven-central" m2compatible="true" descriptor="required"/>
       <!-- Local resolver that points back to the global cache -->
-      <filesystem name="local" m2compatible="true">
+      <filesystem name="local" m2compatible="true" overwrite="true">
         <artifact pattern="${user.home}/.m2/repository/[organisation]/[module]/jars/[module]-[revision].[ext]" />
       </filesystem>
     </chain>
