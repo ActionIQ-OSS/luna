@@ -2,7 +2,7 @@
 
 <ivysettings>
   <!-- Use same cache dir as pants.ini -->
-  <caches defaultCacheDir="${user.home}/.ivy2/pants" />
+  <caches defaultCacheDir="${user.home}/.ivy2/pants" useOrigin="false"/>
 
   <!-- For all resolvers, dont try to check for modified files, and never expire cache -->
   <property name="ivy.resolver.default.check.modified" value="false" />
@@ -12,12 +12,6 @@
 
   <resolvers>
     <chain name="aiq-resolver-chain" returnFirst="true">
-
-      <!-- Local resolver that points back to the global cache -->
-      <filesystem name="local" m2compatible="true">
-        <ivy pattern="${user.home}/.ivy2/pants/[organisation]/[module]/ivy-[revision].[ext]" />
-        <artifact pattern="${user.home}/.ivy2/pants/[organisation]/[module]/jars/[module]-[revision].[ext]" />
-      </filesystem>
 
       <!-- Standard maven repo, do not remove -->
       <ibiblio name="maven-central" m2compatible="true" usepoms="true" descriptor="required"/>
