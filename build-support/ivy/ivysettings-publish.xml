@@ -8,7 +8,6 @@
   <property name="ivy.resolver.default.check.modified" value="false" />
   <property name="ivy.cache.ttl.default" value="eternal" />
   <properties file="${user.home}/.config/pgp.properties"/>
-  <property name="pgp.secring" value="${user.home}/.gnupg/secring.gpg" override="false"/>
   <property name="pgp.keyid" value="auto" override="false"/>
 
   <credentials host="oss.sonatype.org"
