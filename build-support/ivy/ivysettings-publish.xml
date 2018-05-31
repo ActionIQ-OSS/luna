@@ -30,7 +30,7 @@
   <signers>
     <pgp name="pgp"
          keyId="${pgp.keyid}"
-         secring="$pgp.secring}"
+         secring="${pgp.secring}"
          password="${pgp.password}"/>
   </signers>
 
