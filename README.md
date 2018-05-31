@@ -118,7 +118,7 @@ on your implementation of a TransactionLogger that gets attached to the DB insta
     db.transactionLogger.write(LoggingModel(TransactionAction.create, id, input.name))
 ```
 Your TransactionLogger needs to implement the write operation and flush operation.  Flush is called after a transaction
-successfully commits.  You can look at or extend the LogginFile class.
+successfully commits.  You can look at or extend the LoggingFile class.
 
 ### Action Hooks ###
 In some situations you may want to pre process or post process data.  Perhaps a field's value should be
