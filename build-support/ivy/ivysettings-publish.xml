@@ -24,7 +24,7 @@
     <ibiblio name="oss.sonatype.org"
              m2compatible="true"
              root="https://oss.sonatype.org/service/local/staging/deploy/maven2/"
-             signer="gpg"/>
+             signer="pgp"/>
       
   </resolvers>
   <signers>
