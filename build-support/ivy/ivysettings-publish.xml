@@ -7,17 +7,32 @@
   <!-- For all resolvers, dont try to check for modified files, and never expire cache -->
   <property name="ivy.resolver.default.check.modified" value="false" />
   <property name="ivy.cache.ttl.default" value="eternal" />
-  <settings defaultResolver="pants-chain-repos"/>
+  <properties file="${user.home}/.config/pgp.properties"/>
+  <property name="pgp.secring" value="${user.home}/.gnupg/secring.gpg" override="false"/>
+  <property name="pgp.keyid" value="auto" override="false"/>
+
+  <credentials host="oss.sonatype.org"
+               realm="Sonatype Nexus Repository Manager"
+               username="${login}"
+               passwd="${password}"/>
 
   <resolvers>
-    <chain name="pants-chain-repos" returnFirst="true">
-      <!-- <ibiblio name="maven-central" m2compatible="true" descriptor="required"/> -->
-      <!-- Local resolver that points back to the global cache -->
       <filesystem name="local" m2compatible="true" transactional="false">
         <ivy pattern="/tmp/boops/[organisation]/[module]/[revision]/ivy-[revision].pom" />
         <artifact pattern="/tmp/boops/[organisation]/[module]/[revision]/[module]-[revision].[ext]" />
       </filesystem>
+    <ibiblio name="oss.sonatype.org"
+             m2compatible="true"
+             root="https://oss.sonatype.org/service/local/staging/deploy/maven2/"
+             signer="pgp"/>
+      
     </chain>
   </resolvers>
+  <signers>
+    <pgp name="pgp"
+         secring="${pgp.secring}"
+         keyId="${pgp.keyid}"
+         password="${pgp.password}"/>
+  </signers>
 
 </ivysettings>

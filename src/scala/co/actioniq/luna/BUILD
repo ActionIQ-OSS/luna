@@ -15,7 +15,7 @@ scala_library(name='luna',
   provides = scala_artifact(
     org='co.actioniq',
     name='luna',
-    repo=local,
+    repo=public,
   )
 )
 
