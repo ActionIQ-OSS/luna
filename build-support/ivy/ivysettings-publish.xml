@@ -26,7 +26,6 @@
              root="https://oss.sonatype.org/service/local/staging/deploy/maven2/"
              signer="pgp"/>
       
-    </chain>
   </resolvers>
   <signers>
     <pgp name="pgp"
