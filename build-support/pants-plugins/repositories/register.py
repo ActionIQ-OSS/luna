@@ -21,7 +21,7 @@ local_repo = Repository(name='local',
 def org_pantsbuild_publication_metadata(description):
   return OSSRHPublicationMetadata(
     description=description,
-    url='https://github.com/ActionIQ-OSS',
+    url='https://github.com/ActionIQ-OSS/luna',
     licenses=[
       License(
         name='Apache License, Version 2.0',
@@ -32,9 +32,13 @@ def org_pantsbuild_publication_metadata(description):
       Developer(
         name='Larry Finn',
         email='larry@actioniq.com',
-        url='https://github.com/ActionIQ-OSS'
+        url='https://github.com/ActionIQ-OSS/luna'
       )
     ],
+    scm=Scm.github(
+      user='ActionIQ-OSS',
+      repo='luna'
+    ),
   )
 
 
