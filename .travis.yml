@@ -8,6 +8,10 @@ git:
 
 dist: trusty
 
+branches:
+  only:
+  - master
+
 cache:
   timeout: 1000 # sec
   directories:
