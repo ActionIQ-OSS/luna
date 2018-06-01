@@ -11,6 +11,7 @@ import slick.lifted.Tag
   * @tparam I IDType
   */
 trait IdTable[I <: IdType]{
+  //shme
   def id: slick.lifted.Rep[I]
 }
 
