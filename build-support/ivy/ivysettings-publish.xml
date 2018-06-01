@@ -1,0 +1,36 @@
+<?xml version="1.0"?>
+
+<ivysettings>
+  <!-- Use same cache dir as pants.ini -->
+  <caches defaultCacheDir="${user.home}/.ivy2/pants" useOrigin="false" />
+
+  <!-- For all resolvers, dont try to check for modified files, and never expire cache -->
+  <property name="ivy.resolver.default.check.modified" value="false" />
+  <property name="ivy.cache.ttl.default" value="eternal" />
+  <properties file="${user.home}/.config/pgp.properties"/>
+  <property name="pgp.keyid" value="auto" override="false"/>
+  <property name="pgp.pubring" value="${user.home}/.gnupg/pubring.kbx" override="true"/>
+
+  <credentials host="oss.sonatype.org"
+               realm="Sonatype Nexus Repository Manager"
+               username="${login}"
+               passwd="${password}"/>
+
+  <resolvers>
+      <filesystem name="local" m2compatible="true" transactional="false">
+        <ivy pattern="/tmp/boops/[organisation]/[module]/[revision]/ivy-[revision].pom" />
+        <artifact pattern="/tmp/boops/[organisation]/[module]/[revision]/[module]-[revision].[ext]" />
+      </filesystem>
+    <ibiblio name="oss.sonatype.org"
+             m2compatible="true"
+             root="https://oss.sonatype.org/service/local/staging/deploy/maven2/"
+             signer="pgp"/>
+      
+  </resolvers>
+  <signers>
+    <pgp name="pgp"
+         keyId="${pgp.keyid}"
+         password="${pgp.password}"/>
+  </signers>
+
+</ivysettings>

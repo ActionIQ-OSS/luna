@@ -1,0 +1,10 @@
+<!-- See http://bit.ly/1TKKmpd -->
+<ivy-module version="2.0">
+  <info organisation="co.actioniq" module="ivy" revision="1.0-AIQ" />
+  <dependencies defaultconf="default">
+    <dependency org="org.apache.ivy" name="ivy" rev="2.4.0"/>
+    <dependency org="commons-httpclient" name="commons-httpclient" rev="3.1"/>
+    <dependency org="org.bouncycastle" name="bcpg-jdk15on" rev="1.46"/>
+    <dependency org="org.bouncycastle" name="bcprov-jdk15on" rev="1.46"/>
+  </dependencies>
+</ivy-module>

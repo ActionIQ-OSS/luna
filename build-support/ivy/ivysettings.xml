@@ -1,0 +1,29 @@
+<?xml version="1.0"?>
+
+<ivysettings>
+  <!-- Use same cache dir as pants.ini -->
+  <caches defaultCacheDir="${user.home}/.ivy2/pants" useOrigin="false"/>
+
+  <!-- For all resolvers, dont try to check for modified files, and never expire cache -->
+  <property name="ivy.resolver.default.check.modified" value="false" />
+  <property name="ivy.cache.ttl.default" value="eternal" />
+
+   <!-- Ivy S3 library that we hacked up - https://github.com/ActionIQ-OSS/s3-ivy-resolver -->
+
+  <resolvers>
+    <chain name="aiq-resolver-chain" returnFirst="true">
+
+      <!-- Standard maven repo, do not remove -->
+      <ibiblio name="maven-central" m2compatible="true" usepoms="true" descriptor="required"/>
+
+      <!-- Typesafe's maven repo -->
+      <ibiblio name="typesafe" m2compatible="true" usepoms="true" descriptor="required" root="http://repo.typesafe.com/typesafe/releases/"/>
+
+      <!-- Twitter-hosted jvm tools - remove once they are published to maven central. -->
+      <ibiblio name="twitter" m2compatible="true" usepoms="true" descriptor="required" root="http://maven.twttr.com/"/>
+
+    </chain>
+  </resolvers>
+
+  <settings defaultResolver="aiq-resolver-chain"/>
+</ivysettings>
