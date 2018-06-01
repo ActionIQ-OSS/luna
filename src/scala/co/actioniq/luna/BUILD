@@ -16,6 +16,9 @@ scala_library(name='luna',
     org='co.actioniq',
     name='luna',
     repo=public,
+    publication_metadata=pants_library("""
+      Luna makes Slick DAOs simple
+    """),
   )
 )
 
