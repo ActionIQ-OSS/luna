@@ -115,7 +115,7 @@ trait DAOAction[T <: DAOTable.Table[V, I, P], V <: IdModel[I], I <: IdType, P <:
   protected def readByIdRequiredAction(id: I)(implicit ec: ExecutionContext):
   DBIOAction[T#TableElementType, NoStream, Effect.Read]= {
     readByIdQuery(id).result
-      .map(_.headOption.getOrElse(throw new SlickException(s"Unknown $nameSingle id: id")))
+      .map(_.headOption.getOrElse(throw new SlickException(s"Unknown $nameSingle id: $id")))
   }
 
   /**
