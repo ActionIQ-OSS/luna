@@ -7,7 +7,7 @@ import slick.jdbc.{H2Profile, JdbcProfile, MySQLProfile, PostgresProfile}
 import scala.concurrent.{ExecutionContext, Future}
 
 /**
-  * Top of the DAO traits, this actually runs the actions in a transaction.  Most functions return a twitter future
+  * Top of the DAO traits, this actually runs the actions in a transaction.  Most functions return a scala future
   * @tparam T slick table, extends aiqtable
   * @tparam V case class to store result set rows
   * @tparam I id type (option long and uuid)
