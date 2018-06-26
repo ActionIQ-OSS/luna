@@ -28,6 +28,8 @@ class SlickManagedArrayBlockingQueue[E >: Null <: PriorityRunnableProxy](
 
   private[this] def counts = (if (paused) 0 else itemQueue.count) + highPrioItemQueue.count
 
+  private[this] def countsEvenIfPaused = itemQueue.count + highPrioItemQueue.count
+
   /**
     * The number of low/medium priority items in use
     */
@@ -139,7 +141,7 @@ class SlickManagedArrayBlockingQueue[E >: Null <: PriorityRunnableProxy](
     }
   }
 
-  def size: Int = locked(counts)
+  def size: Int = locked(countsEvenIfPaused)
 
   def remainingCapacity: Int = locked(capacity - itemQueue.count - highPrioItemQueue.count)
 
