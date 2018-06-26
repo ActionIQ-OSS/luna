@@ -107,6 +107,19 @@ trait DAOAction[T <: DAOTable.Table[V, I, P], V <: IdModel[I], I <: IdType, P <:
   }
 
   /**
+    * Read ids only
+    * @param extraQueryOps extra query params
+    * @param ec
+    * @return dbioaction of sequence of ids
+    */
+  protected def readIdsAction(
+    extraQueryOps: (QueryWithFilter)=> QueryWithFilter = (query) => query
+  )(implicit ec: ExecutionContext): DBIOAction[Seq[I], NoStream, Effect.Read] = {
+    val query = readQuery
+    idMap(extraQueryOps(query)).result
+  }
+
+  /**
     * Perform action to read object by id, throw exception if not found
     * @param id id of object
     * @param ec

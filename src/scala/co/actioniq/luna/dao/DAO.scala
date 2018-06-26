@@ -138,6 +138,15 @@ trait DAO[T <: DAOTable.Table[V, I, P], V <: IdModel[I], I <: IdType, P <: JdbcP
   }
 
   /**
+    * Run a read but only retrieve ids
+    * @param extraQueryOps extra filters / limits
+    * @return future of seq of ids
+    */
+  def readIdsFuture(extraQueryOps: (QueryWithFilter)=> QueryWithFilter = (query) => query): Future[Seq[I]] = {
+    runTransactionFuture(readIdsAction(extraQueryOps))
+  }
+
+  /**
     * Run a read by id
     * @param id object id
     * @return Future of option of model

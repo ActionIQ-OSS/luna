@@ -63,6 +63,10 @@ class PlayerDAO(
     ).result.statements.head
   }
 
+  def queryForIds(): String = {
+    idMap(readQuery).result.statements.head
+  }
+
   def queryLeftJoinExplicit(): String = {
     getSlickQuery.joinLeft(teamDao.getSlickQuery)
       .on((player, team) => optLongCompare(team.id).equalsLong(player.teamId) && teamDao.getDefaultFilters(team))
