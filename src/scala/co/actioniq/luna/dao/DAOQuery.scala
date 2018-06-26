@@ -146,7 +146,6 @@ trait DAOQuery[T <: DAOTable.Table[V, I, P], V <: IdModel[I], I <: IdType, P <: 
   def readByIdQuery(id: Set[I]): QueryWithFilter = {
     idInSet(readQuery, id.toSeq)
   }
-
 }
 
 /**
@@ -178,9 +177,10 @@ trait IdQuery[T <: DAOTable.Table[V, I, P], V <: IdModel[I], I <: IdType, P <: J
 
   /**
     * Retrieve ID column from query
+    * @param query existing query
     * @return
     */
-  def idMap: Query[Rep[I], I, Seq]
+  def idMap(query: QueryWithFilter): Query[Rep[I], I, Seq]
 
   /**
     * Retrieve sequence of ids from sequence of rows
@@ -306,7 +306,7 @@ trait DAOLongIdQuery[T <: DAOTable.Table[V, DbLongOptId, P], V <: IdModel[DbLong
     * Retrieve ID column from query
     * @return
     */
-  def idMap: Query[Rep[DbLongOptId], DbLongOptId, Seq] = slickQuery.map(_.id)
+  def idMap(query: QueryWithFilter): Query[Rep[DbLongOptId], DbLongOptId, Seq] = query.map(_.id)
 
   /**
     * Retrieve seq of ids from resultset
@@ -554,7 +554,7 @@ trait DAOUUIDQuery[T <: DAOTable.Table[V, DbUUID, P], V <: IdModel[DbUUID], P <:
     * Retrieve ID column from query
     * @return
     */
-  def idMap: Query[Rep[DbUUID], DbUUID, Seq] = slickQuery.map(_.id)
+  def idMap(query: QueryWithFilter): Query[Rep[DbUUID], DbUUID, Seq] = query.map(_.id)
 
   /**
     * Retrieve seq of ids from resultset

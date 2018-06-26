@@ -87,6 +87,16 @@ class DAOSpec extends Specification with Mockito {
       awaitResult(teamDao.readByIdFuture(DbLongOptId(1))) must beNone
       awaitResult(teamDao.readByIdFuture(DbLongOptId(2))) must beSome
     }
+    "read ids" in new TestScope with NoopLoggerProvider {
+      val ids = awaitResult(teamDao.readIdsFuture())
+      ids.size mustEqual 3
+      ids must containTheSameElementsAs(Seq(DbLongOptId(1), DbLongOptId(2), DbLongOptId(3)))
+    }
+    "read ids with filter" in new TestScope with NoopLoggerProvider {
+      val ids = awaitResult(teamDao.readIdsFuture(q => q.filter(_.name === "mets")))
+      ids.size mustEqual 1
+      ids must containTheSameElementsAs(Seq(DbLongOptId(1)))
+    }
   }
 
   "DbUUID DAO" should {
@@ -124,6 +134,21 @@ class DAOSpec extends Specification with Mockito {
       awaitResult(playerDao.readByIdFuture(larryId)) must beNone
       awaitResult(playerDao.readByIdFuture(harryId)) must beSome
     }
+    "read ids" in new TestScope with NoopLoggerProvider {
+      val ids = awaitResult(playerDao.readIdsFuture())
+      ids.size mustEqual 3
+      ids must containTheSameElementsAs(Seq(larryId, harryId, barryId))
+    }
+    "read ids with filter" in new TestScope with NoopLoggerProvider {
+      val ids = awaitResult(playerDao.readIdsFuture(q => q.filter(_.name === "larry")))
+      ids.size mustEqual 1
+      ids must containTheSameElementsAs(Seq(larryId))
+    }
+    "read ids only query id" in new TestScope with NoopLoggerProvider {
+      val query = playerDao.queryForIds()
+      query mustEqual """select "id" from "player""""
+    }
+
   }
 
   "default filters with joins" should {
