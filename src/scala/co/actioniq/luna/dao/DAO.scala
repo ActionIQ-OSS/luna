@@ -345,6 +345,18 @@ trait DAO[T <: DAOTable.Table[V, I, P], V <: IdModel[I], I <: IdType, P <: JdbcP
     runTransactionFuture(updateFieldAction(id, fieldFunction, setTo, validationFieldsOriginal, original))
   }
 
+  /**
+    * Update two fields without touching the rest of the row.  UpdateActionFunctional actually replaces the whole
+    * row with input mixed with original
+    * @param id id of the object
+    * @param fieldFunction function to go from row to fields
+    * @param setTo tuple value to set fields to
+    * @param validationFieldsOriginal function to validate new field values and original object
+    * @param original original object
+    * @tparam A1 field 1 type
+    * @tparam A2 field 2 type
+    * @return future of id
+    */
   def updateFieldFuture[A1, A2](
     id: I,
     fieldFunction:  (T => (Rep[A1], Rep[A2])),
@@ -355,6 +367,18 @@ trait DAO[T <: DAOTable.Table[V, I, P], V <: IdModel[I], I <: IdType, P <: JdbcP
     runTransactionFuture(updateFieldAction(id, fieldFunction, setTo, validationFieldsOriginal, original))
   }
 
+  /**
+    * Update three fields without touching the rest of the row.  UpdateActionFunctional actually replaces the whole
+    * row with input mixed with original
+    * @param id id of the object
+    * @param fieldFunction function to go from row to fields
+    * @param setTo tuple value to set fields to
+    * @param validationFieldsOriginal function to validate new field values and original object
+    * @param original original object
+    * @tparam A1 field 1 type
+    * @tparam A2 field 2 type
+    * @return future of id
+    */
   def updateFieldFuture[A1, A2, A3](
     id: I,
     fieldFunction:  (T => (Rep[A1], Rep[A2], Rep[A3])),
