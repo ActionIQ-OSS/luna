@@ -2,7 +2,7 @@ package co.actioniq.luna.dao
 
 
 import co.actioniq.luna.compiled.{BoundedSeq100, BoundedSeq1000, BoundedSeq200, BoundedSeq500, InSeqDbUUIDImplicits, SlickCompiledFunctionSingleton}
-import slick.jdbc.JdbcProfile
+import slick.jdbc.{JdbcProfile, JdbcType}
 import slick.lifted.{AppliedCompiledFunction, CompiledFunction}
 
 import scala.concurrent.ExecutionContext
@@ -116,6 +116,73 @@ trait DAOQuery[T <: DAOTable.Table[V, I, P], V <: IdModel[I], I <: IdType, P <: 
   DBIOAction[I, NoStream, Effect.Write] = {
     idEquals(readQuery, id)
       .update(input)
+      .map(rowsAffected => id)
+  }
+
+  /**
+    * Update a single field without touching the rest of the row
+    * @param id id of the object
+    * @param fieldFunction function to go from row to field
+    * @param setTo new value
+    * @param ec execution context
+    * @param aType evidence of field type
+    * @tparam A field type
+    * @return
+    */
+  protected def updateFieldQuery[A](id: I, fieldFunction: (T => Rep[A]), setTo: A)(
+    implicit ec: ExecutionContext, aType: JdbcType[A]
+  ): DBIOAction[I, NoStream, Effect.Write] = {
+    idEquals(readQuery, id)
+      .map(fieldFunction)
+      .update(setTo)
+      .map(rowsAffected => id)
+  }
+
+  /**
+    * Update two field without touching the rest of the row
+    * @param id id of the object
+    * @param fieldFunction function to go from row to fields
+    * @param setTo new values
+    * @param ec execution context
+    * @param a1Type evidence of field 1 type
+    * @param a2Type evidence of field 2 type
+    * @tparam A1 field 1 type
+    * @tparam A2 field 1 type
+    * @return
+    */
+  protected def updateFieldQuery[A1, A2](id: I, fieldFunction: (T => (Rep[A1], Rep[A2])), setTo: (A1, A2))(
+    implicit ec: ExecutionContext,
+    a1Type: JdbcType[A1],
+    a2Type: JdbcType[A2]
+  ): DBIOAction[I, NoStream, Effect.Write] = {
+    idEquals(readQuery, id)
+      .map(fieldFunction)
+      .update(setTo)
+      .map(rowsAffected => id)
+  }
+
+  /**
+    * Update three field without touching the rest of the row
+    * @param id id of the object
+    * @param fieldFunction function to go from row to fields
+    * @param setTo new values
+    * @param ec execution context
+    * @param a1Type evidence of field 1 type
+    * @param a2Type evidence of field 2 type
+    * @param a3Type evidence of field 2 type
+    * @tparam A1 field 1 type
+    * @tparam A2 field 1 type
+    * @tparam A3 field 1 type
+    * @return
+    */
+  protected def updateFieldQuery[A1, A2, A3](id: I, fieldFunction: (T => (Rep[A1], Rep[A2], Rep[A3])), setTo: (A1, A2, A3))(
+    implicit ec: ExecutionContext,
+    a1Type: JdbcType[A1],
+    a2Type: JdbcType[A2],
+    a3Type: JdbcType[A3]): DBIOAction[I, NoStream, Effect.Write] = {
+    idEquals(readQuery, id)
+      .map(fieldFunction)
+      .update(setTo)
       .map(rowsAffected => id)
   }
 

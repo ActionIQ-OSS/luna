@@ -3,7 +3,7 @@ package co.actioniq.luna
 import java.util.UUID
 import java.util.concurrent.TimeUnit
 
-import co.actioniq.luna.dao.{DAOException, DbLongOptId, DbUUID}
+import co.actioniq.luna.dao.{DAOException, DbLongOptId, DbUUID, FormValidatorExceptions, FormValidatorMessageSeq}
 import co.actioniq.luna.logging.{NoopBackend, TransactionAction, TransactionLogger}
 import co.actioniq.luna.example.{FilterLarry, LoggingModel, Player, PlayerDAO, PlayerTable, Team, TeamDAO, TeamTable}
 import org.junit.runner.RunWith
@@ -128,6 +128,36 @@ class DAOSpec extends Specification with Mockito {
       newPlayer.id mustEqual larryId
       newPlayer.name mustEqual "Mary"
       newPlayer.teamId mustEqual 1L
+    }
+    "update two field" in new TestScope with NoopLoggerProvider {
+      val player = awaitResult(playerDao.readByIdFuture(larryId)).get
+      val updateFuture = playerDao.updateFieldFuture[String, Long](
+        larryId,
+        row => (row.name, row.teamId),
+        ("booo", 2L),
+        (nameAndTeam, original) => DBIO.successful(FormValidatorMessageSeq(Seq())),
+        Some(player)
+      )
+      awaitResult(updateFuture)
+      val newPlayer = awaitResult(playerDao.readByIdRequiredFuture(larryId))
+      newPlayer.id mustEqual larryId
+      newPlayer.name mustEqual "booo"
+      newPlayer.teamId mustEqual 2L
+    }
+    "update two field and validate" in new TestScope with NoopLoggerProvider {
+      val player = awaitResult(playerDao.readByIdFuture(larryId)).get
+      val updateFuture = playerDao.updateFieldFuture[String, Long](
+        larryId,
+        row => (row.name, row.teamId),
+        ("booo", 2L),
+        (nameAndTeam, original) => {
+          val errors = FormValidatorMessageSeq()
+          errors.assert(nameAndTeam._2 != 2L, "Cannot be in team 2")
+          DBIO.successful(errors)
+        },
+        Some(player)
+      )
+      awaitResult(updateFuture) must throwA[FormValidatorExceptions]
     }
     "delete by id" in new TestScope with NoopLoggerProvider {
       awaitResult(playerDao.deleteFuture(larryId))
