@@ -377,6 +377,7 @@ trait DAO[T <: DAOTable.Table[V, I, P], V <: IdModel[I], I <: IdType, P <: JdbcP
     * @param original original object
     * @tparam A1 field 1 type
     * @tparam A2 field 2 type
+    * @tparam A3 field 3 type
     * @return future of id
     */
   def updateFieldFuture[A1, A2, A3](
