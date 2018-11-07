@@ -2,7 +2,7 @@ package co.actioniq.luna.dao
 
 
 import co.actioniq.luna.{DBWithLogging, OptLongCompare, OptionCompareOption, UUIDCompare}
-import slick.jdbc.{H2Profile, JdbcProfile, MySQLProfile, PostgresProfile}
+import slick.jdbc.{H2Profile, JdbcProfile, JdbcType, MySQLProfile, PostgresProfile}
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -322,6 +322,72 @@ trait DAO[T <: DAOTable.Table[V, I, P], V <: IdModel[I], I <: IdType, P <: JdbcP
       rows <- readAction(query => idInSet(query, ids))
     } yield rows.map(processPostUpdate)
     runTransactionFuture(actions)
+  }
+
+  /**
+    * Update a single field without touching the rest of the row.  UpdateActionFunctional actually replaces the whole
+    * row with input mixed with original
+    * @param id id of the object
+    * @param fieldFunction function to go from row to field
+    * @param setTo value to set field to
+    * @param validationFieldsOriginal function to validate new field value and original object
+    * @param original original object
+    * @tparam A field type
+    * @return future of id
+    */
+  def updateFieldFuture[A](
+    id: I,
+    fieldFunction:  (T => Rep[A]),
+    setTo: A,
+    validationFieldsOriginal: (A, V) => DBIOAction[FormValidatorMessageSeq, NoStream, Effect.Read],
+    original: Option[V]
+  )(implicit aType: JdbcType[A]): Future[I] = {
+    runTransactionFuture(updateFieldAction(id, fieldFunction, setTo, validationFieldsOriginal, original))
+  }
+
+  /**
+    * Update two fields without touching the rest of the row.  UpdateActionFunctional actually replaces the whole
+    * row with input mixed with original
+    * @param id id of the object
+    * @param fieldFunction function to go from row to fields
+    * @param setTo tuple value to set fields to
+    * @param validationFieldsOriginal function to validate new field values and original object
+    * @param original original object
+    * @tparam A1 field 1 type
+    * @tparam A2 field 2 type
+    * @return future of id
+    */
+  def updateFieldFuture[A1, A2](
+    id: I,
+    fieldFunction:  (T => (Rep[A1], Rep[A2])),
+    setTo: (A1, A2),
+    validationFieldsOriginal: ((A1, A2), V) => DBIOAction[FormValidatorMessageSeq, NoStream, Effect.Read],
+    original: Option[V]
+  )(implicit a1Type: JdbcType[A1], a2Type: JdbcType[A2]): Future[I] = {
+    runTransactionFuture(updateFieldAction(id, fieldFunction, setTo, validationFieldsOriginal, original))
+  }
+
+  /**
+    * Update three fields without touching the rest of the row.  UpdateActionFunctional actually replaces the whole
+    * row with input mixed with original
+    * @param id id of the object
+    * @param fieldFunction function to go from row to fields
+    * @param setTo tuple value to set fields to
+    * @param validationFieldsOriginal function to validate new field values and original object
+    * @param original original object
+    * @tparam A1 field 1 type
+    * @tparam A2 field 2 type
+    * @tparam A3 field 3 type
+    * @return future of id
+    */
+  def updateFieldFuture[A1, A2, A3](
+    id: I,
+    fieldFunction:  (T => (Rep[A1], Rep[A2], Rep[A3])),
+    setTo: (A1, A2, A3),
+    validationFieldsOriginal: ((A1, A2, A3), V) => DBIOAction[FormValidatorMessageSeq, NoStream, Effect.Read],
+    original: Option[V]
+  )(implicit a1Type: JdbcType[A1], a2Type: JdbcType[A2], a3Type: JdbcType[A3]): Future[I] = {
+    runTransactionFuture(updateFieldAction(id, fieldFunction, setTo, validationFieldsOriginal, original))
   }
 
   /**

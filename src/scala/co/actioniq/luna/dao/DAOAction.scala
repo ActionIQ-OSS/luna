@@ -1,6 +1,6 @@
 package co.actioniq.luna.dao
 
-import slick.jdbc.JdbcProfile
+import slick.jdbc.{JdbcProfile, JdbcType}
 
 import scala.concurrent.ExecutionContext
 import scala.util.{Failure, Success}
@@ -471,6 +471,117 @@ trait DAOAction[T <: DAOTable.Table[V, I, P], V <: IdModel[I], I <: IdType, P <:
       updateAction(input, validationInputOriginal, originals.find(_.id == input.id))
     })
     DBIO.sequence(actions)
+  }
+
+  /**
+    * Update a single field without touching the rest of the row.  UpdateActionFunctional actually replaces the whole
+    * row with input mixed with original
+    * @param id id of the object
+    * @param fieldFunction function to go from row to field
+    * @param setTo value to set field to
+    * @param validationFieldsOriginal function to validate new field value and original object
+    * @param original original object
+    * @param ec execution context
+    * @param aType evidence of field type
+    * @tparam A field type
+    * @return id
+    */
+  protected def updateFieldAction[A](
+    id: I,
+    fieldFunction:  (T => Rep[A]),
+    setTo: A,
+    validationFieldsOriginal: (A, V) => DBIOAction[FormValidatorMessageSeq, NoStream, Effect.Read],
+    original: Option[V]
+  )(implicit ec: ExecutionContext, aType: JdbcType[A]): DBIOAction[I, NoStream, Effect.Read with Effect.Write] = {
+    for {
+      originalObject <- original match {
+        case None => readByIdRequiredAction(id)
+        case Some(row) => DBIO.successful(row)
+      }
+      _ <- validationsToException(
+        validationFieldsOriginal(setTo, originalObject)
+      )
+      _ <- updateFieldQuery(id, fieldFunction, setTo)
+    } yield id
+  }
+
+  /**
+    * Update TWO fields without touching the rest of the row.  UpdateActionFunctional actually replaces the whole
+    * row with input mixed with original
+    * @param id id of the object
+    * @param fieldFunction function to go from row to fields
+    * @param setTo tuple of values to set fields to
+    * @param validationFieldsOriginal function to validate new field values and original object
+    * @param original original object
+    * @param ec execution context
+    * @param a1Type evidence of field 1 type
+    * @param a2Type evidence of field 2 type
+    * @tparam A1 field 1 type
+    * @tparam A2 field 2 type
+    * @return
+    */
+  protected def updateFieldAction[A1, A2](
+    id: I,
+    fieldFunction:  (T => (Rep[A1], Rep[A2])),
+    setTo: (A1, A2),
+    validationFieldsOriginal: ((A1, A2), V) => DBIOAction[FormValidatorMessageSeq, NoStream, Effect.Read],
+    original: Option[V]
+  )(
+    implicit ec: ExecutionContext,
+    a1Type: JdbcType[A1],
+    a2Type: JdbcType[A2]
+  ): DBIOAction[I, NoStream, Effect.Read with Effect.Write] = {
+    for {
+      originalObject <- original match {
+        case None => readByIdRequiredAction(id)
+        case Some(row) => DBIO.successful(row)
+      }
+      _ <- validationsToException(
+        validationFieldsOriginal(setTo, originalObject)
+      )
+      _ <- updateFieldQuery(id, fieldFunction, setTo)
+    } yield id
+  }
+
+  /**
+    * Update THREE fields without touching the rest of the row.  UpdateActionFunctional actually replaces the whole
+    * row with input mixed with original
+    * @param id id of the object
+    * @param fieldFunction function to go from row to fields
+    * @param setTo tuple of values to set fields to
+    * @param validationFieldsOriginal function to validate new field values and original object
+    * @param original original object
+    * @param ec execution context
+    * @param a1Type evidence of field 1 type
+    * @param a2Type evidence of field 2 type
+    * @param a3Type evidence of field 3 type
+    * @tparam A1 field 1 type
+    * @tparam A2 field 2 type
+    * @tparam A3 field 3 type
+    * @return
+    */
+  protected def updateFieldAction[A1, A2, A3](
+    id: I,
+    fieldFunction:  (T => (Rep[A1], Rep[A2], Rep[A3])),
+    setTo: (A1, A2, A3),
+    validationFieldsOriginal: ((A1, A2, A3), V) => DBIOAction[FormValidatorMessageSeq, NoStream, Effect.Read],
+    original: Option[V]
+  )(
+    implicit ec: ExecutionContext,
+    a1Type: JdbcType[A1],
+    a2Type: JdbcType[A2],
+    a3Type: JdbcType[A3]
+  ): DBIOAction[I, NoStream, Effect.Read with Effect.Write] = {
+    for {
+      originalObject <- original match {
+        case None => readByIdRequiredAction(id)
+        case Some(row) => DBIO.successful(row)
+      }
+      _ <- validationsToException(
+        validationFieldsOriginal(setTo, originalObject)
+      )
+      _ <- updateFieldQuery(id, fieldFunction, setTo)
+    } yield id
   }
 
   /**
