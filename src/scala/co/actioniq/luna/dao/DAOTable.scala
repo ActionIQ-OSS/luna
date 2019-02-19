@@ -1,8 +1,10 @@
 package co.actioniq.luna.dao
 
 
-import slick.jdbc.{H2Profile, JdbcProfile, MySQLProfile, PostgresProfile}
+import slick.dbio.{Effect, NoStream}
+import slick.jdbc.{H2Profile, JdbcProfile, JdbcResultConverterDomain, MySQLProfile, PostgresProfile}
 import slick.lifted.Tag
+import slick.sql.FixedSqlAction
 
 
 /**
@@ -92,6 +94,7 @@ trait CoolMySQLProfile extends MySQLProfile {
       b.build
     }
   }
+
   override def createQueryBuilder(n: slick.ast.Node, state: slick.compiler.CompilerState): QueryBuilder = new OtherQueryBuilder(n, state)
   override lazy val updateCompiler = compiler + new JdbcCodeGen(_.buildUpdate)
 }
@@ -117,7 +120,14 @@ trait CoolH2Profile extends H2Profile {
   import slick.SlickException
   import slick.compiler.CompilerState
   import slick.util.MacroSupport.macroSupportInterpolation
+  import slick.relational.TypeMappingResultConverter
   class OtherQueryBuilder(override val tree: Node, override val state: CompilerState) extends QueryBuilder(tree, state) {
+
+    override def expr(n: Node, skipParens: Boolean): Unit = {
+      println(s"Mooo $n")
+      super.expr(n, skipParens)
+    }
+
     override def buildUpdate = {
       val (gen, from, where, select) = tree match {
         case Comprehension(sym, from: TableNode, Pure(select, _), where, None, _, None, None, None, None, false) => select match {
@@ -142,12 +152,29 @@ trait CoolH2Profile extends H2Profile {
         b" where "
         expr(where.reduceLeft((a, b) => Library.And.typed[Boolean](a, b)), true)
       }
-      b.build
+      val result = b.build
+      println(s"MOOM MOOM ${result}")
+      result
     }
   }
+
   override def createQueryBuilder(n: slick.ast.Node, state: slick.compiler.CompilerState): QueryBuilder = new OtherQueryBuilder(n, state)
   override lazy val updateCompiler = compiler + new JdbcCodeGen(_.buildUpdate)
 
+  override def createUpdateActionExtensionMethods[T](tree: Node, param: Any): UpdateActionExtensionMethods[T] = {
+    println(s"MEOW")
+    new CoolUpdate[T](tree, param)
+  }
+  class CoolUpdate[T](tree: Node, param: Any) extends UpdateActionExtensionMethodsImpl[T](tree, param) {
+    override def update(value: T): FixedSqlAction[Int, NoStream, Effect.Write] = {
+      println(s"VAL ${value}")
+      println(s"DUMP ${converter.getDumpInfo}")
+      println(tree.children)
+      println(converter.asInstanceOf[TypeMappingResultConverter[JdbcResultConverterDomain, T, _]].toBase(value))
+      println(s"HMMM ${converter.asInstanceOf[TypeMappingResultConverter[JdbcResultConverterDomain, T, _]].child.getDumpInfo}")
+      super.update(value)
+    }
+  }
 }
 
 object CoolH2Profile extends CoolH2Profile

@@ -21,6 +21,7 @@ import scala.concurrent.{Await, Future}
 
 @RunWith(classOf[JUnitRunner])
 class DAOSpec extends Specification with Mockito {
+  /*
   "DbUUID" should {
     "handle conversions" in new TestScope with NoopLoggerProvider {
       val randomUuid = UUID.randomUUID().toString
@@ -32,6 +33,7 @@ class DAOSpec extends Specification with Mockito {
       result.head mustEqual test.binValue
     }
   }
+
 
   "MDC Data" should {
     "be maintained in DAO future" in new TestScope with NoopLoggerProvider {
@@ -53,7 +55,6 @@ class DAOSpec extends Specification with Mockito {
       MDC.get(mdcKey) mustEqual mdcVal
     }
   }
-
 
   "DbLongOptId DAO" should {
     "generate id queries" in new TestScope with NoopLoggerProvider {
@@ -98,8 +99,10 @@ class DAOSpec extends Specification with Mockito {
       ids must containTheSameElementsAs(Seq(DbLongOptId(1)))
     }
   }
+*/
 
   "DbUUID DAO" should {
+    /*
     "generate id queries" in new TestScope with NoopLoggerProvider {
       val player = awaitResult(playerDao.readByIdFuture(larryId))
       player.get.name mustEqual "larry"
@@ -121,14 +124,17 @@ class DAOSpec extends Specification with Mockito {
       val ids = awaitResult(playerDao.createFuture(Seq(marry, zarry)))
       ids must contain(maryId, zarryId)
     }
+    */
     "updateFuture by id" in new TestScope with NoopLoggerProvider {
       val player = awaitResult(playerDao.readByIdFuture(larryId)).get
+      println("HEERRRE")
       val updateFutureAndReadFuture = playerDao.updateAndReadFuture(player.copy(name = "Mary"))
       val newPlayer = awaitResult(updateFutureAndReadFuture)
       newPlayer.id mustEqual larryId
       newPlayer.name mustEqual "Mary"
       newPlayer.teamId mustEqual 1L
     }
+    /*
     "update two field" in new TestScope with NoopLoggerProvider {
       val player = awaitResult(playerDao.readByIdFuture(larryId)).get
       val updateFuture = playerDao.updateFieldFuture[String, Long](
@@ -178,9 +184,10 @@ class DAOSpec extends Specification with Mockito {
       val query = playerDao.queryForIds()
       query mustEqual """select "id" from "player""""
     }
+    */
 
   }
-
+  /*
   "default filters with joins" should {
     "handle a join monad" in new TestScope with NoopLoggerProvider  {
       playerDao.queryJoinWithMonad() mustEqual
@@ -359,6 +366,7 @@ class DAOSpec extends Specification with Mockito {
     verify(tl, times(2)).write(any[LoggingModel])
     verify(tl, times(1)).flush()
   }
+  */
 
 
   trait LoggerProvider {

@@ -1,6 +1,6 @@
 package co.actioniq.luna.example
 
-import co.actioniq.luna.dao.{DbUUID, H2DAOTable, H2IdModel, IdModel, JdbcTypeImplicits}
+import co.actioniq.luna.dao.{CoolColumnOption, DbUUID, H2DAOTable, H2IdModel, IdModel, JdbcTypeImplicits}
 import co.actioniq.luna.dao.CoolH2Profile.api._
 import slick.lifted.{Rep, Tag}
 
@@ -14,7 +14,7 @@ class PlayerTable(tag: Tag)
   extends H2DAOTable[Player, DbUUID](tag, "player") with NameTable {
 
   override def id: Rep[DbUUID] = column[DbUUID]("id")
-  def teamId: Rep[Long] = column[Long]("team_id")
+  def teamId: Rep[Long] = column[Long]("team_id", CoolColumnOption.IgnoreUpdate)
   override def name: Rep[String] = column[String]("name")
 
   override def * = ( // scalastyle:ignore
