@@ -1,7 +1,7 @@
 package co.actioniq.luna.example
 
 import co.actioniq.luna.dao.{DbUUID, H2DAOTable, H2IdModel}
-import slick.jdbc.H2Profile.api._
+import co.actioniq.luna.dao.CoolH2Profile.api._
 
 case class Kitty(
   override val id: DbUUID,

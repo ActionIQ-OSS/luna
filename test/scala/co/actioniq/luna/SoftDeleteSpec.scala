@@ -3,13 +3,13 @@ package co.actioniq.luna
 import java.util.concurrent.TimeUnit
 
 import co.actioniq.luna.dao.DbUUID
+import co.actioniq.luna.dao.CoolH2Profile.api._
 import co.actioniq.luna.example.{Kitty, KittyDAO}
 import co.actioniq.luna.logging.NoopBackend
 import org.junit.runner.RunWith
 import org.specs2.mock.Mockito
 import org.specs2.mutable.Specification
 import org.specs2.runner.JUnitRunner
-import slick.jdbc.H2Profile.api._
 
 import scala.concurrent.duration.Duration
 import scala.concurrent.{Await, Future}

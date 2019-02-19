@@ -1,6 +1,6 @@
 package co.actioniq.luna
 
-import co.actioniq.luna.dao.{DAO, DAODynamicProfileTable, DAOLongIdQuery, DbLongOptId, FormValidatorMessageSeq, IdModel, JdbcTypeImplicits, JdbcTypes}
+import co.actioniq.luna.dao.{CoolH2Profile, DAO, DAODynamicProfileTable, DAOLongIdQuery, DbLongOptId, FormValidatorMessageSeq, IdModel, JdbcTypeImplicits, JdbcTypes}
 import co.actioniq.luna.logging.NoopBackend
 import co.actioniq.luna.OptionCompareOption.optionCompare
 import org.junit.runner.RunWith
@@ -27,7 +27,7 @@ class DynamicTypesSpec extends Specification with Mockito {
     implicit val logger = new NoopBackend {}
     val dao = new PersistedDao(
       db,
-      H2Profile,
+      CoolH2Profile,
       dynamicSlick
     ) with JdbcTypeImplicits.h2JdbcTypeImplicits.DbImplicits
   }
@@ -73,10 +73,10 @@ class DynamicTypesSpec extends Specification with Mockito {
   object DynamicSlick {
     trait H2Provider {
       private val creator = (tag: Tag) => {
-        val wrapper = new DynamicWrapper(H2Profile, JdbcTypeImplicits.h2JdbcTypeImplicits)
+        val wrapper = new DynamicWrapper(CoolH2Profile, JdbcTypeImplicits.h2JdbcTypeImplicits)
           new wrapper.DynamicSlickTable(tag)
       }
-      val dynamicSlick = new TableQuery[DynamicWrapper[H2Profile]#DynamicSlickTable](creator)
+      val dynamicSlick = new TableQuery[DynamicWrapper[CoolH2Profile]#DynamicSlickTable](creator)
     }
     trait MysqlProvider {
       private val creator = (tag: Tag) => {

@@ -1,11 +1,10 @@
 package co.actioniq.luna.example
 
 import co.actioniq.luna.DBWithLogging
-import co.actioniq.luna.dao.{DAOLongIdQuery, DbLongOptId, FormValidatorMessageSeq, H2DAO}
+import co.actioniq.luna.dao.{CoolH2Profile, DAOLongIdQuery, DbLongOptId, FormValidatorMessageSeq, H2DAO}
+import co.actioniq.luna.dao.CoolH2Profile.api._
 import co.actioniq.luna.logging.NoopBackend
 import slick.dbio.DBIOAction
-import slick.jdbc.H2Profile
-import slick.jdbc.H2Profile.api._
 import slick.lifted.TableQuery
 import slick.util.SlickMDCContext
 
@@ -16,7 +15,7 @@ class TeamDAO(
   override val slickQuery: TableQuery[TeamTable]
 ) extends H2DAO[TeamTable, Team, DbLongOptId]
   with NoopBackend
-  with DAOLongIdQuery[TeamTable, Team, H2Profile] {
+  with DAOLongIdQuery[TeamTable, Team, CoolH2Profile] {
 
   def readByIdQueryStatement(id: DbLongOptId): String = readByIdQuery(id).result.statements.head
 

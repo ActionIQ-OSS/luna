@@ -4,6 +4,7 @@ import java.util.UUID
 import java.util.concurrent.TimeUnit
 
 import co.actioniq.luna.dao.{DAOException, DbLongOptId, DbUUID, FormValidatorExceptions, FormValidatorMessageSeq}
+import co.actioniq.luna.dao.CoolH2Profile.api._
 import co.actioniq.luna.logging.{NoopBackend, TransactionAction, TransactionLogger}
 import co.actioniq.luna.example.{FilterLarry, LoggingModel, Player, PlayerDAO, PlayerTable, Team, TeamDAO, TeamTable}
 import org.junit.runner.RunWith
@@ -12,7 +13,6 @@ import org.specs2.mock.Mockito
 import org.specs2.mutable.Specification
 import org.specs2.runner.JUnitRunner
 import slick.jdbc.{GetResult, PositionedParameters, SetParameter}
-import slick.jdbc.H2Profile.api._
 import slick.util.SlickMDCContext.Implicits.defaultContext
 import org.slf4j.MDC
 
