@@ -10,5 +10,6 @@
     <root level="OFF">
         <appender-ref ref="console"/>
     </root>
+    <logger name="slick" level="DEBUG"/>
     <!-- logger name="slick.jdbc.JdbcBackend" level="DEBUG" / -->
 </configuration>

@@ -10,6 +10,10 @@ case class Player(
   name: String
 ) extends H2IdModel[DbUUID]
 
+case class LiftedPlayerUpdate(
+  name: Rep[String]
+)
+
 class PlayerTable(tag: Tag)
   extends H2DAOTable[Player, DbUUID](tag, "player") with NameTable {
 
