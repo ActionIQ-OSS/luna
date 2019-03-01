@@ -1,15 +1,16 @@
 package co.actioniq.luna.dao
 
 
-import slick.ast.{Bind, CompiledStatement, FieldSymbol, Filter, Node, ProductNode, Pure, Ref, ResultSetMapping, Select, StructNode}
+import slick.ast.{Bind, CompiledStatement, FieldSymbol, Filter, Insert, Node, ProductNode, Pure, Ref, ResultSetMapping, Select, StructNode}
 import slick.compiler.InsertCompiler.Mode
-import slick.compiler.{CompilerState, Phase}
+import slick.compiler.{CodeGen, CompilerState, InsertCompiler, Phase, QueryCompiler}
 import slick.dbio.{Effect, NoStream}
-import slick.jdbc.{H2Profile, JdbcProfile, JdbcResultConverterDomain, MySQLProfile, PostgresProfile}
+import slick.driver.JdbcProfile
+import slick.jdbc.{H2Profile, InsertBuilderResult, JdbcProfile, JdbcResultConverterDomain, MySQLProfile, PostgresProfile}
 import slick.lifted.Tag
 import slick.relational.{CompiledMapping, ProductResultConverter, TypeMappingResultConverter}
 import slick.sql.FixedSqlAction
-import slick.util.ConstArray
+import slick.util.{ConstArray, SQLBuilder}
 
 
 /**
@@ -119,7 +120,7 @@ object CoolMySQLProfile extends CoolMySQLProfile {
   }
 }
 
-trait CoolH2Profile extends H2Profile {
+trait CoolH2Profile extends H2Profile { self => JdbcProfile
   import slick.ast._
   import slick.util.ConstArray
   import slick.SlickException
@@ -189,16 +190,81 @@ trait CoolH2Profile extends H2Profile {
   }
 
   override def createQueryBuilder(n: slick.ast.Node, state: slick.compiler.CompilerState): QueryBuilder = new OtherQueryBuilder(n, state)
-  override lazy val updateCompiler = (compiler + new JdbcCodeGen(_.buildUpdate)).addAfter(new IgnoreUpdateCompiler(), Phase.flattenProjections)
+  override lazy val updateCompiler = (compiler + new CoolJdbcCodeGen(_.buildUpdate)).addAfter(new IgnoreUpdateCompiler(), Phase.flattenProjections)
+  //override lazy val updateCompiler = QueryCompiler(Phase.assignUniqueSymbols, Phase.inferTypes, new InsertCompiler(IgnoreFieldForUpdate), new JdbcInsertCodeGen(createUpdateInsertBuilder))
+
+  class CoolJdbcCodeGen(f: QueryBuilder => SQLBuilder.Result) extends CodeGen {
+    def compileServerSideAndMapping(serverSide: Node, mapping: Option[Node], state: CompilerState) = {
+      val (tree, tpe) = treeAndType(serverSide)
+      println(s"TREE $tree")
+      val (gen, from, where, select) = tree match {
+        case Comprehension(sym, from: TableNode, Pure(select, _), where, None, _, None, None, None, None, false) =>
+          select match {
+            case f @ Select(Ref(struct), _) if struct == sym =>
+              (sym, from, where, ConstArray(f.field))
+            case ProductNode(ch) if ch.forall{ case Select(Ref(struct), _) if struct == sym => true; case _ => false} =>
+              (sym, from, where, ch.map{ case Select(Ref(_), field) => field })
+            case _ => throw new SlickException("A query for an UPDATE statement must select table columns only -- Unsupported shape: "+select)
+          }
+        case o => throw new SlickException("A query for an UPDATE statement must resolve to a comprehension with a single table -- Unsupported shape: "+o)
+      }
+      val importantList = select.zipWithIndex.map { rowWithIndex =>
+        val isImportant = rowWithIndex._1 match {
+          case s: FieldSymbol => !s.options.contains(CoolColumnOption.IgnoreUpdate)
+          case _ => true
+        }
+        (rowWithIndex._2, isImportant)
+      }.toMap
+      val sbr = f(self.createQueryBuilder(tree, state))
+      val newMapping = mapping.map { mappy =>
+        println(s"MAPPY $mappy")
+        mappy match {
+          case typey @ TypeMapping(child, mapper, classTag) =>
+            println(s"CHILD $child")
+            val newChild = child match {
+              case pn @ ProductNode(children) =>
+                println(s"Children $children")
+                val newChildren = children.toSeq.zipWithIndex.filter { row =>
+                  importantList(row._2)
+                }.map(_._1).zipWithIndex.map {
+                  case (p @ Select(s, ElementSymbol(idx)), pos) => println(s"COT DAMN $p")
+                    p
+                  case (p @ Path(ts), pos) => ts.foreach(t => println(s"$t ${t.getClass}"))
+                    p
+                  case n => n._1
+                }
+                println(s"New children $newChildren")
+                pn.copy(children=ConstArray.from(newChildren))
+              case n => n
+            }
+            val newMapper = mapper.copy(toBase = a => {
+              val result = mapper.toBase(a)
+              result match {
+                case x: Product => println(s" product arry ${x.productArity}")
+                  val newTup = (x.productElement(0), x.productElement(2))
+                  println(newTup)
+                  (x.productElement(0), x.productElement(2))
+                case n => n
+              }
+            })
+            typey.copy(mapper = newMapper, child=newChild)
+          case n => n
+        }
+      }
+      println(s"new mapping ${newMapping.get}")
+      (CompiledStatement(sbr.sql, sbr, tpe).infer(), newMapping.map(mappingCompiler.compileMapping))
+    }
+  }
 
   override def createUpdateActionExtensionMethods[T](tree: Node, param: Any): UpdateActionExtensionMethods[T] = {
-    println(s"MEOW")
+    println(s"MEOW $tree $param")
     new CoolUpdate[T](tree, param)
   }
   class CoolUpdate[T](tree: Node, param: Any) extends UpdateActionExtensionMethodsImpl[T](tree, param) {
     override def update(value: T): FixedSqlAction[Int, NoStream, Effect.Write] = {
       println(s"VAL ${value}")
       println(s"DUMP ${converter.getDumpInfo}")
+      println(s"PARAM $param")
       println(tree.children)
       tree.children.foreach { child =>
         println(s"Child $child")
@@ -211,7 +277,16 @@ trait CoolH2Profile extends H2Profile {
       }
       println(converter.asInstanceOf[TypeMappingResultConverter[JdbcResultConverterDomain, T, _]].toBase(value))
       println(s"HMMM ${converter.asInstanceOf[TypeMappingResultConverter[JdbcResultConverterDomain, T, _]].child.getDumpInfo}")
-      super.update(value)
+      val beh = new SimpleJdbcProfileAction[Int]("update", Vector(sres.sql)) {
+        def run(ctx: Backend#Context, sql: Vector[String]): Int = ctx.session.withPreparedStatement(sql.head) { st =>
+          st.clearParameters
+          converter.set(value, st)
+          sres.setter(st, converter.width+1, param)
+          st.executeUpdate
+        }
+      }
+      beh
+      //super.update(value)
     }
   }
 }
@@ -226,6 +301,7 @@ object CoolColumnOption {
 case object IgnoreFieldForUpdate extends Mode {
   def apply(fs: FieldSymbol) = !fs.options.contains(CoolColumnOption.IgnoreUpdate)
 }
+
 
 class IgnoreUpdateCompiler extends Phase {
   override val name: String = "ignoreUpdateCompiler"
