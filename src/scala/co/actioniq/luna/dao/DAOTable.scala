@@ -1,16 +1,12 @@
 package co.actioniq.luna.dao
 
 
-import slick.ast.{Bind, CompiledStatement, FieldSymbol, Filter, Insert, Node, ProductNode, Pure, Ref, ResultSetMapping, Select, StructNode}
 import slick.compiler.InsertCompiler.Mode
-import slick.compiler.{CodeGen, CompilerState, InsertCompiler, Phase, QueryCompiler}
-import slick.dbio.{Effect, NoStream}
+import slick.compiler.{CompilerState, Phase}
 import slick.driver.JdbcProfile
-import slick.jdbc.{H2Profile, InsertBuilderResult, JdbcProfile, JdbcResultConverterDomain, MySQLProfile, PostgresProfile}
+import slick.jdbc.{H2Profile, JdbcProfile, MySQLProfile, PostgresProfile}
 import slick.lifted.Tag
-import slick.relational.{CompiledMapping, ProductResultConverter, TypeMappingResultConverter}
-import slick.sql.FixedSqlAction
-import slick.util.{ConstArray, SQLBuilder}
+import slick.util.ConstArray
 
 
 /**
@@ -72,10 +68,10 @@ class DAODynamicProfileTable[P <: JdbcProfile] (
 }
 
 trait CoolMySQLProfile extends MySQLProfile {
-  import slick.ast._
-  import slick.util.ConstArray
   import slick.SlickException
+  import slick.ast._
   import slick.compiler.CompilerState
+  import slick.util.ConstArray
   import slick.util.MacroSupport.macroSupportInterpolation
   class OtherQueryBuilder(override val tree: Node, override val state: CompilerState) extends QueryBuilder(tree, state) {
     override def buildUpdate = {
@@ -121,174 +117,7 @@ object CoolMySQLProfile extends CoolMySQLProfile {
 }
 
 trait CoolH2Profile extends H2Profile { self => JdbcProfile
-  import slick.ast._
-  import slick.util.ConstArray
-  import slick.SlickException
-  import slick.compiler.CompilerState
-  import slick.util.MacroSupport.macroSupportInterpolation
-  import slick.relational.TypeMappingResultConverter
-  class OtherQueryBuilder(override val tree: Node, override val state: CompilerState) extends QueryBuilder(tree, state) {
-
-    override def expr(n: Node, skipParens: Boolean): Unit = {
-      println(s"Mooo $n")
-      val newN = n match {
-        case c @ Comprehension(sym, from: TableNode, Pure(select, selectIdentity), where, None, _, None, None, None, None, false) =>
-          println(s"WEEEE comprehension $select $selectIdentity")
-          val newSelect = select match {
-            case f @ Select(Ref(struct), _) if struct == sym =>
-              println(s"WEEEE select $f")
-              f
-            case ProductNode(ch) if ch.forall { case Select(Ref(struct), _) if struct == sym => true; case _ => false } =>
-              val newChildren = ConstArray.from(ch.toSeq.filter {
-                case Select(Ref(s), fs: FieldSymbol) => IgnoreFieldForUpdate(fs)
-                case _: Node => true
-              })
-              println(s"WEEE product $ch")
-              println(s"WEEE product $newChildren")
-              ProductNode(ch)
-            case n: Node => n
-          }
-          c.copy(select = Pure(newSelect, selectIdentity))
-        case n: Node => n
-      }
-      super.expr(newN, skipParens)
-    }
-
-    override def buildUpdate = {
-      val (gen, from, where, select) = tree match {
-        case Comprehension(sym, from: TableNode, Pure(select, _), where, None, _, None, None, None, None, false) =>
-
-          println(s"Some select $select")
-          select match {
-            case f @ Select(Ref(struct), _) if struct == sym =>
-              (sym, from, where, ConstArray(f.field))
-            case ProductNode(ch) if ch.forall{ case Select(Ref(struct), _) if struct == sym => true; case _ => false} =>
-              println(s"Product node $ch")
-              (sym, from, where, ch.map{ case Select(Ref(_), field) => field })
-            case _ => throw new SlickException("A query for an UPDATE statement must select table columns only -- Unsupported shape: "+select)
-          }
-        case o => throw new SlickException("A query for an UPDATE statement must resolve to a comprehension with a single table -- Unsupported shape: "+o)
-      }
-
-      println(s"boom boom")
-      val selectsForUpdate = select.filter {
-        case s: FieldSymbol => !s.options.contains(CoolColumnOption.IgnoreUpdate)
-        case _ => true
-      }
-      val qtn = quoteTableName(from)
-      symbolName(gen) = qtn // Alias table to itself because UPDATE does not support aliases
-      b"update $qtn set "
-      b.sep(selectsForUpdate, ", ")(field => b += symbolName(field) += " = ?")
-      if(!where.isEmpty) {
-        b" where "
-        expr(where.reduceLeft((a, b) => Library.And.typed[Boolean](a, b)), true)
-      }
-      val result = b.build
-      println(s"MOOM MOOM ${result}")
-      result
-    }
-  }
-
-  override def createQueryBuilder(n: slick.ast.Node, state: slick.compiler.CompilerState): QueryBuilder = new OtherQueryBuilder(n, state)
-  override lazy val updateCompiler = (compiler + new CoolJdbcCodeGen(_.buildUpdate)).addAfter(new IgnoreUpdateCompiler(), Phase.flattenProjections)
-  //override lazy val updateCompiler = QueryCompiler(Phase.assignUniqueSymbols, Phase.inferTypes, new InsertCompiler(IgnoreFieldForUpdate), new JdbcInsertCodeGen(createUpdateInsertBuilder))
-
-  class CoolJdbcCodeGen(f: QueryBuilder => SQLBuilder.Result) extends CodeGen {
-    def compileServerSideAndMapping(serverSide: Node, mapping: Option[Node], state: CompilerState) = {
-      val (tree, tpe) = treeAndType(serverSide)
-      println(s"TREE $tree")
-      val (gen, from, where, select) = tree match {
-        case Comprehension(sym, from: TableNode, Pure(select, _), where, None, _, None, None, None, None, false) =>
-          select match {
-            case f @ Select(Ref(struct), _) if struct == sym =>
-              (sym, from, where, ConstArray(f.field))
-            case ProductNode(ch) if ch.forall{ case Select(Ref(struct), _) if struct == sym => true; case _ => false} =>
-              (sym, from, where, ch.map{ case Select(Ref(_), field) => field })
-            case _ => throw new SlickException("A query for an UPDATE statement must select table columns only -- Unsupported shape: "+select)
-          }
-        case o => throw new SlickException("A query for an UPDATE statement must resolve to a comprehension with a single table -- Unsupported shape: "+o)
-      }
-      val importantList = select.zipWithIndex.map { rowWithIndex =>
-        val isImportant = rowWithIndex._1 match {
-          case s: FieldSymbol => !s.options.contains(CoolColumnOption.IgnoreUpdate)
-          case _ => true
-        }
-        (rowWithIndex._2, isImportant)
-      }.toMap
-      val sbr = f(self.createQueryBuilder(tree, state))
-      val newMapping = mapping.map { mappy =>
-        println(s"MAPPY $mappy")
-        mappy match {
-          case typey @ TypeMapping(child, mapper, classTag) =>
-            println(s"CHILD $child")
-            val newChild = child match {
-              case pn @ ProductNode(children) =>
-                println(s"Children $children")
-                val newChildren = children.toSeq.zipWithIndex.filter { row =>
-                  importantList(row._2)
-                }.map(_._1).zipWithIndex.map {
-                  case (p @ Select(s, ElementSymbol(idx)), pos) => println(s"COT DAMN $p")
-                    p
-                  case (p @ Path(ts), pos) => ts.foreach(t => println(s"$t ${t.getClass}"))
-                    p
-                  case n => n._1
-                }
-                println(s"New children $newChildren")
-                pn.copy(children=ConstArray.from(newChildren))
-              case n => n
-            }
-            val newMapper = mapper.copy(toBase = a => {
-              val result = mapper.toBase(a)
-              result match {
-                case x: Product => println(s" product arry ${x.productArity}")
-                  val newTup = (x.productElement(0), x.productElement(2))
-                  println(newTup)
-                  (x.productElement(0), x.productElement(2))
-                case n => n
-              }
-            })
-            typey.copy(mapper = newMapper, child=newChild)
-          case n => n
-        }
-      }
-      println(s"new mapping ${newMapping.get}")
-      (CompiledStatement(sbr.sql, sbr, tpe).infer(), newMapping.map(mappingCompiler.compileMapping))
-    }
-  }
-
-  override def createUpdateActionExtensionMethods[T](tree: Node, param: Any): UpdateActionExtensionMethods[T] = {
-    println(s"MEOW $tree $param")
-    new CoolUpdate[T](tree, param)
-  }
-  class CoolUpdate[T](tree: Node, param: Any) extends UpdateActionExtensionMethodsImpl[T](tree, param) {
-    override def update(value: T): FixedSqlAction[Int, NoStream, Effect.Write] = {
-      println(s"VAL ${value}")
-      println(s"DUMP ${converter.getDumpInfo}")
-      println(s"PARAM $param")
-      println(tree.children)
-      tree.children.foreach { child =>
-        println(s"Child $child")
-        child match {
-          case CompiledMapping(conv, tpe) =>
-            println(s"CONV $conv")
-            println(s"type $tpe")
-          case c => c
-        }
-      }
-      println(converter.asInstanceOf[TypeMappingResultConverter[JdbcResultConverterDomain, T, _]].toBase(value))
-      println(s"HMMM ${converter.asInstanceOf[TypeMappingResultConverter[JdbcResultConverterDomain, T, _]].child.getDumpInfo}")
-      val beh = new SimpleJdbcProfileAction[Int]("update", Vector(sres.sql)) {
-        def run(ctx: Backend#Context, sql: Vector[String]): Int = ctx.session.withPreparedStatement(sql.head) { st =>
-          st.clearParameters
-          converter.set(value, st)
-          sres.setter(st, converter.width+1, param)
-          st.executeUpdate
-        }
-      }
-      beh
-      //super.update(value)
-    }
-  }
+  override lazy val updateCompiler = (compiler + new JdbcCodeGen(_.buildUpdate)).addAfter(new IgnoreUpdateCompiler(), Phase.hoistClientOps)
 }
 
 object CoolH2Profile extends CoolH2Profile
@@ -299,88 +128,104 @@ object CoolColumnOption {
 }
 
 case object IgnoreFieldForUpdate extends Mode {
+  import slick.ast._
   def apply(fs: FieldSymbol) = !fs.options.contains(CoolColumnOption.IgnoreUpdate)
 }
 
 
 class IgnoreUpdateCompiler extends Phase {
+  import slick.ast._
   override val name: String = "ignoreUpdateCompiler"
 
   override def apply(state: CompilerState): CompilerState = {
-    println("APPLYZ")
-    val newState = state.map { tree =>
-      tree match {
-        case b@Bind(something, from, to) =>
-          println(s"From $from")
-          from match {
-            case Filter(s, fFrom, fTo) =>
-              println(s"Filter $fFrom $fTo")
-          }
-          println(s"To $to")
-          val newTo = to match {
-            case Pure(v, i) =>
-              println(s"Pure $v $i")
-              val newNode = v match {
-                case s @ StructNode(children) =>
-                  children.foreach { child =>
-                    println(s"Child $child")
-                  }
-                  val newChildren = children.filter {
-                    case (_, Select(Ref(_), fs: FieldSymbol)) => IgnoreFieldForUpdate(fs)
-                    case _: Node => true
-                  }
-                  s.copy(elements = children)
+    var fields: ConstArray[FieldSymbol] = ConstArray.empty
+    var fieldsToRemove: Map[Int, Boolean] = Map()
+    state.map {
+      case rsm @ ResultSetMapping(ts, from, map) =>
+        val newFrom = from match {
+          case b @ Bind(sym, bindFrom, bindSelect) =>
+            val newSelect = bindSelect match {
+              case p @ Pure(bindSelect, _) =>
+                val filteredSelect = bindSelect match {
+                  case struct @ StructNode(elements) if elements.forall{ case (_, Select(Ref(str), _)) if str == sym => true; case _ => false} =>
+                    fields = elements.map {
+                      case (_, s @ Select(Ref(_), fieldInfo: FieldSymbol)) => fieldInfo
+                    }
+                    fieldsToRemove = getFieldsToRemove(fields)
+                    struct.copy(elements=filterImportantFields(elements))
+                  case n => n
+                }
+                p.copy(value=filteredSelect)
+              case n => n
+            }
+            b.copy(select = newSelect).infer()
+          case n => n
+        }
+        val newMap = map match {
+          case typey @ TypeMapping(child, mapper, classTag) =>
+            val newChild = child match {
+              case pn @ ProductNode(children) =>
+                val newChildren = children.toSeq.zipWithIndex.filter { row =>
+                  !fieldsToRemove(row._2)
+                }.map(_._1).zipWithIndex.map(_._1)
+                pn.copy(children=ConstArray.from(newChildren))
+              case n => n
+            }
+            val newMapper = mapper.copy(toBase = a => {
+              val result = mapper.toBase(a)
+              result match {
+                case x: Product =>
+                  tupleToFilteredTuple(x, fieldsToRemove)
+                case n => n
               }
-              println(s"Pure $newNode $i")
-              Pure(newNode, i)
-            case n: Node => n
-          }
-          println(s"To $newTo")
-          b.copy(select = newTo)
-        case n: Node => n
-      }
+            })
+            typey.copy(mapper = newMapper, child=newChild)
+        }
+        rsm.copy(from = newFrom, map = newMap)
+      case n => n
     }
-    println(s"NEW $newState")
-    newState
   }
-  /*
-  override def apply(state: CompilerState): CompilerState = {
-    println("APPLY")
-    val newState = state.map { tree =>
-      tree match {
-        case b @ Bind(something, from, to) =>
-          println(s"From $from")
-          from match {
-            case Filter(s, fFrom, fTo) =>
-              println(s"Filter $fFrom $fTo")
-          }
-          println(s"To $to")
-          val newTo = to match {
-            case Pure(v, i) =>
-              println(s"Pure $v $i")
-              val newNode = v match {
-                case ProductNode(children) =>
-                  println(s"ProductNode $children")
-                  val filteredChildren = ConstArray.from(children.filter {
-                    case Select(Ref(s), fs: FieldSymbol) => IgnoreFieldForUpdate(fs)
-                    case _: Node => true
-                  }.toSeq)
-                  println(s"New children ${filteredChildren}")
-                  println(s"New product node ${ProductNode(filteredChildren)}")
-                  ProductNode(children)
-                case n: Node => n
-              }
-              println(s"Pure $newNode $i")
-              Pure(newNode, i)
-            case n: Node => n
-          }
-          println(s"To $newTo")
-          b.copy(select = newTo)
-        case n: Node => n
-      }
+
+  def tupleToFilteredTuple(input: Product, fieldsToRemove: Map[Int, Boolean]): Product = {
+    input.productIterator.zipWithIndex.filter{ row =>
+      !fieldsToRemove(row._2)
+    }.map(_._1).toList match {
+      case List(a) => Tuple1(a)
+      case List(a, b) => (a, b)
+      case List(a, b, c) => (a, b, c)
+      case List(a, b, c, d) => (a, b, c, d)
+      case List(a, b, c, d, e) => (a, b, c, d, e)
+      case List(a, b, c, d, e, f) => (a, b, c, d, e, f)
+      case List(a, b, c, d, e, f, g) => (a, b, c, d, e, f, g)
+      case List(a, b, c, d, e, f, g, h) => (a, b, c, d, e, f, g, h)
+      case List(a, b, c, d, e, f, g, h, i) => (a, b, c, d, e, f, g, h, i)
+      case List(a, b, c, d, e, f, g, h, i, j) => (a, b, c, d, e, f, g, h, i, j)
+      case List(a, b, c, d, e, f, g, h, i, j, k) => (a, b, c, d, e, f, g, h, i, j, k)
+      case List(a, b, c, d, e, f, g, h, i, j, k, l) => (a, b, c, d, e, f, g, h, i, j, k, l)
+      case List(a, b, c, d, e, f, g, h, i, j, k, l, m) => (a, b, c, d, e, f, g, h, i, j, k, l, m)
+      case List(a, b, c, d, e, f, g, h, i, j, k, l, m, n) => (a, b, c, d, e, f, g, h, i, j, k, l, m, n)
+      case List(a, b, c, d, e, f, g, h, i, j, k, l, m, n, o) => (a, b, c, d, e, f, g, h, i, j, k, l, m, n, o)
+      case List(a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p) => (a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p)
+      case List(a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q) => (a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q)
+      case List(a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r) => (a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r)
+      case List(a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r, s) => (a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r, s)
+      case List(a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r, s, t) => (a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r, s, t)
+      case List(a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r, s, t, u) => (a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r, s, t, u)
+      case List(a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r, s, t, u, v) => (a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r, s, t, u, v)
     }
-    println(s"NEW $newState")
-    newState
+    //v is 22
   }
-  */
+
+  def filterImportantFields(elements: ConstArray[(TermSymbol, Node)]): ConstArray[(TermSymbol, Node)] = {
+    elements.filter {
+      case (_, s @ Select(Ref(_), fieldInfo: FieldSymbol)) => !fieldInfo.options.contains(CoolColumnOption.IgnoreUpdate)
+    }
+  }
+
+  def getFieldsToRemove(fields: ConstArray[FieldSymbol]): Map[Int, Boolean] = {
+    fields.zipWithIndex.map { rowWithIndex =>
+      val isImportant = rowWithIndex._1.options.contains(CoolColumnOption.IgnoreUpdate)
+      (rowWithIndex._2, isImportant)
+    }.toMap
+  }
 }
