@@ -21,7 +21,6 @@ import scala.concurrent.{Await, Future}
 
 @RunWith(classOf[JUnitRunner])
 class DAOSpec extends Specification with Mockito {
-  /*
   "DbUUID" should {
     "handle conversions" in new TestScope with NoopLoggerProvider {
       val randomUuid = UUID.randomUUID().toString
@@ -99,10 +98,8 @@ class DAOSpec extends Specification with Mockito {
       ids must containTheSameElementsAs(Seq(DbLongOptId(1)))
     }
   }
-*/
 
   "DbUUID DAO" should {
-    /*
     "generate id queries" in new TestScope with NoopLoggerProvider {
       val player = awaitResult(playerDao.readByIdFuture(larryId))
       player.get.name mustEqual "larry"
@@ -124,7 +121,6 @@ class DAOSpec extends Specification with Mockito {
       val ids = awaitResult(playerDao.createFuture(Seq(marry, zarry)))
       ids must contain(maryId, zarryId)
     }
-    */
     "updateFuture by id" in new TestScope with NoopLoggerProvider {
       val player = awaitResult(playerDao.readByIdFuture(larryId)).get
       println("HEERRRE")
@@ -133,6 +129,12 @@ class DAOSpec extends Specification with Mockito {
       newPlayer.id mustEqual larryId
       newPlayer.name mustEqual "Mary"
       newPlayer.teamId mustEqual 1L
+
+      val ignoreTeamUpdate = playerDao.updateAndReadFuture(newPlayer.copy(teamId = 2L))
+      val ignoreNewPlayer = awaitResult(ignoreTeamUpdate)
+      ignoreNewPlayer.id mustEqual larryId
+      ignoreNewPlayer.name mustEqual "Mary"
+      ignoreNewPlayer.teamId mustEqual 1L
     }
     /*
     "update two field" in new TestScope with NoopLoggerProvider {
@@ -165,6 +167,7 @@ class DAOSpec extends Specification with Mockito {
       )
       awaitResult(updateFuture) must throwA[FormValidatorExceptions]
     }
+    */
     "delete by id" in new TestScope with NoopLoggerProvider {
       awaitResult(playerDao.deleteFuture(larryId))
       awaitResult(playerDao.readByIdFuture(larryId)) must beNone
@@ -184,8 +187,6 @@ class DAOSpec extends Specification with Mockito {
       val query = playerDao.queryForIds()
       query mustEqual """select "id" from "player""""
     }
-    */
-
   }
   /*
   "default filters with joins" should {

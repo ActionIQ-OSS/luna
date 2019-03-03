@@ -17,7 +17,7 @@ case class LiftedPlayerUpdate(
 class PlayerTable(tag: Tag)
   extends H2DAOTable[Player, DbUUID](tag, "player") with NameTable {
 
-  override def id: Rep[DbUUID] = column[DbUUID]("id")
+  override def id: Rep[DbUUID] = column[DbUUID]("id", CoolColumnOption.IgnoreUpdate)
   def teamId: Rep[Long] = column[Long]("team_id", CoolColumnOption.IgnoreUpdate)
   override def name: Rep[String] = column[String]("name")
 
