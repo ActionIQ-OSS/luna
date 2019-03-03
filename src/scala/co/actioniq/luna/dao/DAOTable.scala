@@ -191,33 +191,16 @@ class IgnoreUpdateCompiler extends Phase {
   }
 
   def tupleToFilteredTuple(input: Product, fieldsToRemove: Map[Int, Boolean]): Product = {
-    input.productIterator.zipWithIndex.filter{ row =>
-      !fieldsToRemove(row._2)
-    }.map(_._1).toList match {
-      case List(a) => Tuple1(a)
-      case List(a, b) => (a, b)
-      case List(a, b, c) => (a, b, c)
-      case List(a, b, c, d) => (a, b, c, d)
-      case List(a, b, c, d, e) => (a, b, c, d, e)
-      case List(a, b, c, d, e, f) => (a, b, c, d, e, f)
-      case List(a, b, c, d, e, f, g) => (a, b, c, d, e, f, g)
-      case List(a, b, c, d, e, f, g, h) => (a, b, c, d, e, f, g, h)
-      case List(a, b, c, d, e, f, g, h, i) => (a, b, c, d, e, f, g, h, i)
-      case List(a, b, c, d, e, f, g, h, i, j) => (a, b, c, d, e, f, g, h, i, j)
-      case List(a, b, c, d, e, f, g, h, i, j, k) => (a, b, c, d, e, f, g, h, i, j, k)
-      case List(a, b, c, d, e, f, g, h, i, j, k, l) => (a, b, c, d, e, f, g, h, i, j, k, l)
-      case List(a, b, c, d, e, f, g, h, i, j, k, l, m) => (a, b, c, d, e, f, g, h, i, j, k, l, m)
-      case List(a, b, c, d, e, f, g, h, i, j, k, l, m, n) => (a, b, c, d, e, f, g, h, i, j, k, l, m, n)
-      case List(a, b, c, d, e, f, g, h, i, j, k, l, m, n, o) => (a, b, c, d, e, f, g, h, i, j, k, l, m, n, o)
-      case List(a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p) => (a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p)
-      case List(a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q) => (a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q)
-      case List(a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r) => (a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r)
-      case List(a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r, s) => (a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r, s)
-      case List(a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r, s, t) => (a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r, s, t)
-      case List(a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r, s, t, u) => (a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r, s, t, u)
-      case List(a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r, s, t, u, v) => (a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r, s, t, u, v)
+    new Product {
+      private val items = input.productIterator.zipWithIndex.filter{ row =>
+        !fieldsToRemove(row._2)
+      }.map(_._1).toList
+      override def productElement(n: Int): Any = items(n)
+
+      override def productArity: Int = items.size
+
+      override def canEqual(that: Any): Boolean = that.isInstanceOf[Product]
     }
-    //v is 22
   }
 
   def filterImportantFields(elements: ConstArray[(TermSymbol, Node)]): ConstArray[(TermSymbol, Node)] = {

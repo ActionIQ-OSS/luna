@@ -128,11 +128,14 @@ class DAOSpec extends Specification with Mockito {
       newPlayer.id mustEqual larryId
       newPlayer.name mustEqual "Mary"
       newPlayer.teamId mustEqual 1L
+    }
 
-      val ignoreTeamUpdate = playerDao.updateAndReadFuture(newPlayer.copy(teamId = 2L))
+    "updateFuture ignore field" in new TestScope with NoopLoggerProvider {
+      val player = awaitResult(playerDao.readByIdFuture(larryId)).get
+      val ignoreTeamUpdate = playerDao.updateAndReadFuture(player.copy(teamId = 2L, name = "Harp"))
       val ignoreNewPlayer = awaitResult(ignoreTeamUpdate)
       ignoreNewPlayer.id mustEqual larryId
-      ignoreNewPlayer.name mustEqual "Mary"
+      ignoreNewPlayer.name mustEqual "Harp"
       ignoreNewPlayer.teamId mustEqual 1L
     }
 
