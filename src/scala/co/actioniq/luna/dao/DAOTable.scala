@@ -141,12 +141,12 @@ class IgnoreUpdateCompiler extends Phase {
     var fields: ConstArray[FieldSymbol] = ConstArray.empty
     var fieldsToRemove: Map[Int, Boolean] = Map()
     state.map {
-      case rsm @ ResultSetMapping(ts, from, map) =>
+      case rsm @ ResultSetMapping(_, from, map) =>
         val newFrom = from match {
-          case b @ Bind(sym, bindFrom, bindSelect) =>
+          case b @ Bind(sym, _, bindSelect) =>
             val newSelect = bindSelect match {
-              case p @ Pure(bindSelect, _) =>
-                val filteredSelect = bindSelect match {
+              case p @ Pure(pureSelect, _) =>
+                val filteredSelect = pureSelect match {
                   case struct @ StructNode(elements) if elements.forall{ case (_, Select(Ref(str), _)) if str == sym => true; case _ => false} =>
                     fields = elements.map {
                       case (_, s @ Select(Ref(_), fieldInfo: FieldSymbol)) => fieldInfo
@@ -180,8 +180,12 @@ class IgnoreUpdateCompiler extends Phase {
               }
             })
             typey.copy(mapper = newMapper, child=newChild)
+          case n => n
         }
-        rsm.copy(from = newFrom, map = newMap)
+        map match {
+          case TypeMapping(_, _, _) => rsm.copy(from = newFrom, map = newMap)
+          case n => rsm
+        }
       case n => n
     }
   }

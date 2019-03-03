@@ -123,7 +123,6 @@ class DAOSpec extends Specification with Mockito {
     }
     "updateFuture by id" in new TestScope with NoopLoggerProvider {
       val player = awaitResult(playerDao.readByIdFuture(larryId)).get
-      println("HEERRRE")
       val updateFutureAndReadFuture = playerDao.updateAndReadFuture(player.copy(name = "Mary"))
       val newPlayer = awaitResult(updateFutureAndReadFuture)
       newPlayer.id mustEqual larryId
@@ -136,7 +135,7 @@ class DAOSpec extends Specification with Mockito {
       ignoreNewPlayer.name mustEqual "Mary"
       ignoreNewPlayer.teamId mustEqual 1L
     }
-    /*
+
     "update two field" in new TestScope with NoopLoggerProvider {
       val player = awaitResult(playerDao.readByIdFuture(larryId)).get
       val updateFuture = playerDao.updateFieldFuture[String, Long](
@@ -167,7 +166,6 @@ class DAOSpec extends Specification with Mockito {
       )
       awaitResult(updateFuture) must throwA[FormValidatorExceptions]
     }
-    */
     "delete by id" in new TestScope with NoopLoggerProvider {
       awaitResult(playerDao.deleteFuture(larryId))
       awaitResult(playerDao.readByIdFuture(larryId)) must beNone
@@ -188,7 +186,6 @@ class DAOSpec extends Specification with Mockito {
       query mustEqual """select "id" from "player""""
     }
   }
-  /*
   "default filters with joins" should {
     "handle a join monad" in new TestScope with NoopLoggerProvider  {
       playerDao.queryJoinWithMonad() mustEqual
@@ -367,7 +364,6 @@ class DAOSpec extends Specification with Mockito {
     verify(tl, times(2)).write(any[LoggingModel])
     verify(tl, times(1)).flush()
   }
-  */
 
 
   trait LoggerProvider {
