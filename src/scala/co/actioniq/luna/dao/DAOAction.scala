@@ -148,7 +148,7 @@ trait DAOAction[T <: DAOTable.Table[V, I, P], V <: IdModel[I], I <: IdType, P <:
         true
       } else {
           val outputIds = objects.map(_.id).toSet
-          throw new SlickException(s"Unkonwn $nameSingle id: ${id.diff(outputIds)}")
+          throw new SlickException(s"Unknown $nameSingle id: ${id.diff(outputIds)}")
       }
     } yield objects
   }
