@@ -22,7 +22,6 @@ class IgnoreUpdateCompiler extends Phase {
   override val name: String = "ignoreUpdateCompiler"
 
   override def apply(state: CompilerState): CompilerState = {
-    var fields: ConstArray[FieldSymbol] = ConstArray.empty
     var fieldsToRemove: Map[Int, Boolean] = Map()
     state.map {
       case rsm @ ResultSetMapping(_, from, map) =>
@@ -32,7 +31,7 @@ class IgnoreUpdateCompiler extends Phase {
               case p @ Pure(pureSelect, _) =>
                 val filteredSelect = pureSelect match {
                   case struct @ StructNode(elements) if elements.forall{ case (_, Select(Ref(str), _)) if str == sym => true; case _ => false} =>
-                    fields = elements.map {
+                    val fields = elements.map {
                       case (_, s @ Select(Ref(_), fieldInfo: FieldSymbol)) => fieldInfo
                     }
                     fieldsToRemove = getFieldsToRemove(fields)
