@@ -4,7 +4,7 @@ import java.util.UUID
 import java.util.concurrent.TimeUnit
 
 import co.actioniq.luna.dao.{DAOException, DbLongOptId, DbUUID, FormValidatorExceptions, FormValidatorMessageSeq}
-import co.actioniq.luna.dao.CoolH2Profile.api._
+import co.actioniq.luna.dao.DAOH2Profile.api._
 import co.actioniq.luna.logging.{NoopBackend, TransactionAction, TransactionLogger}
 import co.actioniq.luna.example.{FilterLarry, LoggingModel, Player, PlayerDAO, PlayerTable, Team, TeamDAO, TeamTable}
 import org.junit.runner.RunWith

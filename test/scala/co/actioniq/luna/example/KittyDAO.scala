@@ -2,7 +2,7 @@ package co.actioniq.luna.example
 
 import co.actioniq.luna.DBWithLogging
 import co.actioniq.luna.dao._
-import co.actioniq.luna.dao.CoolH2Profile.api._
+import co.actioniq.luna.dao.DAOH2Profile.api._
 import co.actioniq.luna.logging.NoopBackend
 import slick.dbio.Effect
 import slick.jdbc.{H2Profile, JdbcType}
@@ -16,8 +16,8 @@ class KittyDAO(
   override val slickQuery: TableQuery[KittyTable]
 ) extends H2DAO[KittyTable, Kitty, DbUUID]
   with NoopBackend
-  with DAOUUIDQuery[KittyTable, Kitty, CoolH2Profile]
-  with SoftDeleteOptional[KittyTable, Kitty, DbUUID, CoolH2Profile, Long]{
+  with DAOUUIDQuery[KittyTable, Kitty, DAOH2Profile]
+  with SoftDeleteOptional[KittyTable, Kitty, DbUUID, DAOH2Profile, Long]{
 
   override protected implicit val ec: ExecutionContext = SlickMDCContext.Implicits.defaultContext
 

@@ -1,9 +1,9 @@
 package co.actioniq.luna
 
 import co.actioniq.luna.OptionCompareOption.optionCompare
-import co.actioniq.luna.dao.{CoolH2Profile, DAOLongIdQuery, DbLongOptId, FormValidatorMessageSeq, H2DAO, H2DAOTable, IdModel, JdbcTypeImplicits, JdbcTypes}
+import co.actioniq.luna.dao.{DAOH2Profile, DAOLongIdQuery, DbLongOptId, FormValidatorMessageSeq, H2DAO, H2DAOTable, IdModel, JdbcTypeImplicits, JdbcTypes}
 import co.actioniq.luna.logging.{NoopBackend, TransactionLogger}
-import co.actioniq.luna.dao.CoolH2Profile.api._
+import co.actioniq.luna.dao.DAOH2Profile.api._
 import org.junit.runner.RunWith
 import org.specs2.mock.Mockito
 import org.specs2.mutable.Specification
@@ -76,7 +76,7 @@ class AiqSlickProfileSpec extends Specification with Mockito {
     override val slickQuery: TableQuery[PersistedSlickTable]
   ) extends H2DAO[PersistedSlickTable, PersistedSlick, DbLongOptId]
     with NoopBackend
-    with DAOLongIdQuery[PersistedSlickTable, PersistedSlick, CoolH2Profile] {
+    with DAOLongIdQuery[PersistedSlickTable, PersistedSlick, DAOH2Profile] {
 
     def readByIdIfDefined(id: Option[Long]): String = {
       slickQuery.filter(s => optionCompare(s.someId) =:= id).result.statements.toList.head

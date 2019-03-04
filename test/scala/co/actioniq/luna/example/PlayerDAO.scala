@@ -1,8 +1,8 @@
 package co.actioniq.luna.example
 
 import co.actioniq.luna.DBWithLogging
-import co.actioniq.luna.dao.{CoolH2Profile, DAOUUIDQuery, DbLongOptId, DbUUID, FormValidatorMessageSeq, H2DAO}
-import co.actioniq.luna.dao.CoolH2Profile.api._
+import co.actioniq.luna.dao.{DAOH2Profile, DAOUUIDQuery, DbLongOptId, DbUUID, FormValidatorMessageSeq, H2DAO}
+import co.actioniq.luna.dao.DAOH2Profile.api._
 import co.actioniq.luna.logging.TransactionAction
 import slick.dbio.DBIOAction
 import slick.lifted.{Rep, TableQuery}
@@ -16,7 +16,7 @@ class PlayerDAO(
   override val slickQuery: TableQuery[PlayerTable],
   val teamDao: TeamDAO
 ) extends H2DAO[PlayerTable, Player, DbUUID]
-  with DAOUUIDQuery[PlayerTable, Player, CoolH2Profile] {
+  with DAOUUIDQuery[PlayerTable, Player, DAOH2Profile] {
 
   override protected implicit val ec: ExecutionContext = SlickMDCContext.Implicits.defaultContext
 
