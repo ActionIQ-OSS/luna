@@ -409,13 +409,13 @@ trait DAO[T <: DAOTable.Table[V, I, P], V <: IdModel[I], I <: IdType, P <: JdbcP
   }
 }
 
-trait MySQLDAO[T <: MySQLDAOTable[V, I], V <: IdModel[I], I <: IdType] extends DAO[T, V, I, MySQLProfile]
+trait MySQLDAO[T <: MySQLDAOTable[V, I], V <: IdModel[I], I <: IdType] extends DAO[T, V, I, DAOMySQLProfile]
   with JdbcTypeImplicits.mySQLJdbcTypeImplicits.DbImplicits
 
 trait PostgresDAO[T <: PostgresDAOTable[V, I], V <: IdModel[I], I <: IdType] extends DAO[T, V, I, PostgresProfile]
   with JdbcTypeImplicits.postgresJdbcTypeImplicits.DbImplicits
 
-trait H2DAO[T <: H2DAOTable[V, I], V <: IdModel[I], I <: IdType] extends DAO[T, V, I, H2Profile]
+trait H2DAO[T <: H2DAOTable[V, I], V <: IdModel[I], I <: IdType] extends DAO[T, V, I, DAOH2Profile]
   with JdbcTypeImplicits.h2JdbcTypeImplicits.DbImplicits{
-  override protected val profile = H2Profile
+  override protected val profile = DAOH2Profile
 }

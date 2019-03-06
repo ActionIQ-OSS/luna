@@ -1,7 +1,7 @@
 package co.actioniq.luna.example
 
 import co.actioniq.luna.dao.{DbLongOptId, H2DAOTable, H2IdModel, IdModel, JdbcTypeImplicits}
-import slick.jdbc.H2Profile.api._
+import co.actioniq.luna.dao.DAOH2Profile.api._
 import slick.lifted.{Rep, TableQuery, Tag}
 
 case class Team(

@@ -1,7 +1,7 @@
 package co.actioniq.luna.dao
 
 
-import slick.jdbc.{H2Profile, JdbcProfile, MySQLProfile, PostgresProfile}
+import slick.jdbc.{JdbcProfile, PostgresProfile}
 import slick.lifted.Tag
 
 
@@ -22,11 +22,13 @@ abstract class MySQLDAOTable[V <: IdModel[I], I <: IdType](
   tag: Tag,
   tableName: String,
   schemaName: Option[String] = None
-) extends MySQLProfile.Table[V](tag, schemaName, tableName)
+) extends DAOMySQLProfile.Table[V](tag, schemaName, tableName)
   with IdTable[I]
   with JdbcTypeImplicits.mySQLJdbcTypeImplicits.DbImplicits {
-  self: DAOTable.Table[V, I, MySQLProfile] =>
+  self: DAOTable.Table[V, I, DAOMySQLProfile] =>
 }
+
+
 
 abstract class PostgresDAOTable[V <: IdModel[I], I <: IdType](
   tag: Tag,
@@ -42,10 +44,10 @@ abstract class H2DAOTable[V <: IdModel[I], I <: IdType](
   tag: Tag,
   tableName: String,
   schemaName: Option[String] = None
-) extends H2Profile.Table[V](tag, schemaName, tableName)
+) extends DAOH2Profile.Table[V](tag, schemaName, tableName)
   with IdTable[I]
   with JdbcTypeImplicits.h2JdbcTypeImplicits.DbImplicits {
-  self: DAOTable.Table[V, I, H2Profile] =>
+  self: DAOTable.Table[V, I, DAOH2Profile] =>
 }
 
 class DAODynamicProfileTable[P <: JdbcProfile] (

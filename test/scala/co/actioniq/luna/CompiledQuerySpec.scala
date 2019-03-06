@@ -4,7 +4,8 @@ import java.util.concurrent.TimeUnit
 
 import co.actioniq.luna.{DBWithLogging, SlickScope}
 import co.actioniq.luna.compiled.{BoundedSeq, BoundedSeq100, InSeqDbUUIDImplicits, SlickCompiledFunctionSingleton}
-import co.actioniq.luna.dao.{DAOUUIDQuery, DbUUID, FormValidatorMessageSeq, H2DAO, H2DAOTable, IdModel, JdbcTypeImplicits}
+import co.actioniq.luna.dao.{DAOH2Profile, DAOUUIDQuery, DbUUID, FormValidatorMessageSeq, H2DAO, H2DAOTable, IdModel, JdbcTypeImplicits}
+import co.actioniq.luna.dao.DAOH2Profile.api._
 import co.actioniq.luna.logging.NoopBackend
 import org.junit.runner.RunWith
 import org.specs2.mock.Mockito
@@ -12,7 +13,6 @@ import org.specs2.mutable.Specification
 import org.specs2.runner.JUnitRunner
 import slick.jdbc.{H2Profile, JdbcProfile}
 import slick.lifted.{AppliedCompiledFunction, CompiledFunction, CompiledStreamingExecutable, TableQuery, Tag}
-import slick.jdbc.H2Profile.api._
 
 import scala.concurrent.{Await, ExecutionContext}
 import scala.concurrent.duration.{Duration, SECONDS}
@@ -176,7 +176,7 @@ class PersistedDao(
   override protected val db: DBWithLogging,
   private val persistedSlick: TableQuery[PersistedSlickTable]
 ) extends H2DAO[PersistedSlickTable, PersistedSlick, DbUUID]
-  with DAOUUIDQuery[PersistedSlickTable, PersistedSlick, H2Profile]
+  with DAOUUIDQuery[PersistedSlickTable, PersistedSlick, DAOH2Profile]
   with NoopBackend
   with InSeqDbUUIDImplicits {
   override def validateCreate(

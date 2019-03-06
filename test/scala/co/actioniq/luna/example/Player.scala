@@ -1,7 +1,7 @@
 package co.actioniq.luna.example
 
-import co.actioniq.luna.dao.{DbUUID, H2DAOTable, H2IdModel, IdModel, JdbcTypeImplicits}
-import slick.jdbc.H2Profile.api._
+import co.actioniq.luna.dao.{ExtraColumnOption, DbUUID, H2DAOTable, H2IdModel, IdModel, JdbcTypeImplicits}
+import co.actioniq.luna.dao.DAOH2Profile.api._
 import slick.lifted.{Rep, Tag}
 
 case class Player(
@@ -10,11 +10,15 @@ case class Player(
   name: String
 ) extends H2IdModel[DbUUID]
 
+case class LiftedPlayerUpdate(
+  name: Rep[String]
+)
+
 class PlayerTable(tag: Tag)
   extends H2DAOTable[Player, DbUUID](tag, "player") with NameTable {
 
-  override def id: Rep[DbUUID] = column[DbUUID]("id")
-  def teamId: Rep[Long] = column[Long]("team_id")
+  override def id: Rep[DbUUID] = column[DbUUID]("id", ExtraColumnOption.IgnoreUpdate)
+  def teamId: Rep[Long] = column[Long]("team_id", ExtraColumnOption.IgnoreUpdate)
   override def name: Rep[String] = column[String]("name")
 
   override def * = ( // scalastyle:ignore
