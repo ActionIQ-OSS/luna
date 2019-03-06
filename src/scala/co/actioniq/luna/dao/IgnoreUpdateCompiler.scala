@@ -1,5 +1,6 @@
 package co.actioniq.luna.dao
 
+import slick.SlickException
 import slick.compiler.InsertCompiler.Mode
 import slick.compiler.{CompilerState, Phase}
 import slick.util.ConstArray
@@ -21,6 +22,13 @@ class IgnoreUpdateCompiler extends Phase {
   import slick.ast._
   override val name: String = "ignoreUpdateCompiler"
 
+  def allElementsInTable(elements: ConstArray[(TermSymbol, Node)], table: TermSymbol): Boolean = {
+    elements.forall{
+      case (_, Select(Ref(str), _)) if str == table => true
+      case _ => false
+    }
+  }
+
   override def apply(state: CompilerState): CompilerState = {
     var fieldsToRemove: Map[Int, Boolean] = Map()
     state.map {
@@ -30,7 +38,7 @@ class IgnoreUpdateCompiler extends Phase {
             val newSelect = bindSelect match {
               case p @ Pure(pureSelect, _) =>
                 val filteredSelect = pureSelect match {
-                  case struct @ StructNode(elements) if elements.forall{ case (_, Select(Ref(str), _)) if str == sym => true; case _ => false} =>
+                  case struct @ StructNode(elements) if allElementsInTable(elements, sym) =>
                     val fields = elements.map {
                       case (_, s @ Select(Ref(_), fieldInfo: FieldSymbol)) => fieldInfo
                     }
@@ -48,9 +56,9 @@ class IgnoreUpdateCompiler extends Phase {
           case typey @ TypeMapping(child, mapper, _) =>
             val newChild = child match {
               case pn @ ProductNode(children) =>
-                val newChildren = children.toSeq.zipWithIndex.filter { row =>
-                  !fieldsToRemove(row._2)
-                }.map(_._1).zipWithIndex.map(_._1)
+                val newChildren = children.toSeq.zipWithIndex.collect {
+                  case row: (Node, Int) if !fieldsToRemove(row._2) => row._1
+                }
                 pn.copy(children=ConstArray.from(newChildren))
               case n => n
             }
@@ -69,15 +77,15 @@ class IgnoreUpdateCompiler extends Phase {
           case TypeMapping(_, _, _) => rsm.copy(from = newFrom, map = newMap)
           case n => rsm
         }
-      case n => n
+      case n => throw new SlickException(s"Expected ResultSetMapping for IgnoreUpdateCompiler, got $n")
     }
   }
 
   def tupleToFilteredTuple(input: Product, fieldsToRemove: Map[Int, Boolean]): Product = {
     new Product {
-      private val items = input.productIterator.zipWithIndex.filter{ row =>
-        !fieldsToRemove(row._2)
-      }.map(_._1).toList
+      private val items = input.productIterator.zipWithIndex.collect{
+        case row: (Any, Int) if !fieldsToRemove(row._2) => row._1
+      }.toList
       override def productElement(n: Int): Any = items(n)
 
       override def productArity: Int = items.size
