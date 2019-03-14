@@ -43,7 +43,7 @@ class JdbcTypeImplicits[P <: JdbcProfile](val profile: P) {
 
 object JdbcTypeImplicits {
   val h2JdbcTypeImplicits = new JdbcTypeImplicits[DAOH2Profile](DAOH2Profile)
-  val mySQLJdbcTypeImplicits = new JdbcTypeImplicits[MySQLProfile](MySQLProfile)
+  val mySQLJdbcTypeImplicits = new JdbcTypeImplicits[DAOMySQLProfile](DAOMySQLProfile)
   val postgresJdbcTypeImplicits = new JdbcTypeImplicits[PostgresProfile](PostgresProfile)
 }
 
