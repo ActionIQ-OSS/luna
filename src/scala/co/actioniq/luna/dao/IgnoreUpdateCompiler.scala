@@ -30,7 +30,8 @@ class IgnoreUpdateCompiler extends Phase {
   }
 
   override def apply(state: CompilerState): CompilerState = {
-    var fieldsToRemove: Map[Int, Boolean] = Map()
+    var fieldsToRemove: Map[String, Boolean] = Map()
+    var positionalFieldsToKeep: Set[Int] = Set()
     state.map {
       case rsm @ ResultSetMapping(_, from, map) =>
         val newFrom = from match {
@@ -40,7 +41,8 @@ class IgnoreUpdateCompiler extends Phase {
                 val filteredSelect = pureSelect match {
                   case struct @ StructNode(elements) if allElementsInTable(elements, sym) =>
                     val fields = elements.map {
-                      case (_, s @ Select(Ref(_), fieldInfo: FieldSymbol)) => fieldInfo
+                      case (t, Select(Ref(_), fieldInfo: FieldSymbol)) =>
+                        (t.toString(), fieldInfo)
                     }
                     fieldsToRemove = getFieldsToRemove(fields)
                     struct.copy(elements=filterImportantFields(elements))
@@ -57,7 +59,9 @@ class IgnoreUpdateCompiler extends Phase {
             val newChild = child match {
               case pn @ ProductNode(children) =>
                 val newChildren = children.toSeq.zipWithIndex.collect {
-                  case row: (Node, Int) if !fieldsToRemove(row._2) => row._1
+                  case (p @ Path(elements), index: Int) if elements.nonEmpty && !fieldsToRemove.getOrElse(elements.head.toString(), false) =>
+                    positionalFieldsToKeep += index
+                    p
                 }
                 pn.copy(children=ConstArray.from(newChildren))
               case n => n
@@ -66,7 +70,7 @@ class IgnoreUpdateCompiler extends Phase {
               val result = mapper.toBase(a)
               result match {
                 case x: Product =>
-                  tupleToFilteredTuple(x, fieldsToRemove)
+                  tupleToFilteredTuple(x, positionalFieldsToKeep)
                 case n => n
               }
             })
@@ -74,17 +78,17 @@ class IgnoreUpdateCompiler extends Phase {
           case n => n
         }
         map match {
-          case TypeMapping(_, _, _) => rsm.copy(from = newFrom, map = newMap)
+          case TypeMapping(_, _, _) => rsm.copy(from = newFrom, map = newMap).infer()
           case n => rsm
         }
       case n => throw new SlickException(s"Expected ResultSetMapping for IgnoreUpdateCompiler, got $n")
     }
   }
 
-  def tupleToFilteredTuple(input: Product, fieldsToRemove: Map[Int, Boolean]): Product = {
+  def tupleToFilteredTuple(input: Product, positionalFieldsToKeep: Set[Int]): Product = {
     new Product {
       private val items = input.productIterator.zipWithIndex.collect{
-        case row: (Any, Int) if !fieldsToRemove(row._2) => row._1
+        case row: (Any, Int) if positionalFieldsToKeep(row._2) => row._1
       }.toList
       override def productElement(n: Int): Any = items(n)
 
@@ -100,10 +104,10 @@ class IgnoreUpdateCompiler extends Phase {
     }
   }
 
-  def getFieldsToRemove(fields: ConstArray[FieldSymbol]): Map[Int, Boolean] = {
-    fields.zipWithIndex.map { rowWithIndex =>
-      val isImportant = rowWithIndex._1.options.contains(ExtraColumnOption.IgnoreUpdate)
-      (rowWithIndex._2, isImportant)
+  def getFieldsToRemove(fields: ConstArray[(String, FieldSymbol)]): Map[String, Boolean] = {
+    fields.map { fieldWithTermSymbol =>
+      val isImportant = fieldWithTermSymbol._2.options.contains(ExtraColumnOption.IgnoreUpdate)
+      (fieldWithTermSymbol._1, isImportant)
     }.toMap
   }
 }
