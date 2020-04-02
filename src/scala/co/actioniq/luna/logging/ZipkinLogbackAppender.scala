@@ -2,6 +2,7 @@ package co.actioniq.luna.logging
 
 import java.util.concurrent.{LinkedBlockingQueue, ThreadPoolExecutor, TimeUnit}
 
+import brave.internal.HexCodec
 import brave.propagation.TraceContext
 import brave.sampler.Sampler
 import brave.{Span, Tracer, Tracing}
@@ -51,6 +52,20 @@ trait ZipkinLogbackAppenderTrait extends AppenderBase[ILoggingEvent] {
   )
   private val sqlCache = CacheBuilder.newBuilder().expireAfterWrite(3, TimeUnit.MINUTES).build[String, LogMeasurement]()
 
+  /**
+    * We have a string in the mdc, unsure if it is a long already or a hex that needs to be converted
+    * @param id string representing a long or hex
+    * @return long value of input
+    */
+  private def longOrHexToLong(id: String): Long = {
+    try {
+      id.toLong
+    } catch {
+      case _: NumberFormatException =>
+        HexCodec.lowerHexToUnsignedLong(id)
+    }
+  }
+
   override def append(e: ILoggingEvent): Unit = {
     if (isStarted && Option(e).isDefined) {
       val time = e.getTimeStamp * 1000
@@ -69,7 +84,7 @@ trait ZipkinLogbackAppenderTrait extends AppenderBase[ILoggingEvent] {
             val endTime = startInfo.timestamp + parseDurationMessageToDuration(e.getMessage)
             val query = startInfo.message + " -- " + e.getMessage
             sqlCache.invalidate(cacheKey)
-            val parentContext = TraceContext.newBuilder().traceId(traceId.toLong).spanId(spanId.toLong).build()
+            val parentContext = TraceContext.newBuilder().traceId(longOrHexToLong(traceId)).spanId(longOrHexToLong(spanId)).build()
             val endpoint = Endpoint.builder().serviceName("mysql").build()
             tracer.newChild(parentContext)
               .kind(Span.Kind.CLIENT)
