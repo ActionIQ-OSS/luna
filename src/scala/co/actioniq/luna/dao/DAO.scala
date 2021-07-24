@@ -24,6 +24,12 @@ trait DAO[T <: DAOTable.Table[V, I, P], V <: IdModel[I], I <: IdType, P <: JdbcP
   implicit def optLongCompare(e: Rep[DbLongOptId]): OptLongCompare = OptionCompareOption.optLongCompare(e)
 
   /**
+   * A way to specify a read only db
+   * @return read only db, by default current db
+   */
+  protected def readOnlyDb(): DBWithLogging = db
+
+  /**
     * Wrapper for running a trx.... SOON WE CAN PUT SOME AUDIT LOGGING IN
     * @param a DBIOAction
     * @tparam R result type
@@ -31,6 +37,16 @@ trait DAO[T <: DAOTable.Table[V, I, P], V <: IdModel[I], I <: IdType, P <: JdbcP
     */
   protected def runTransactionFuture[R](a: DBIOAction[R, NoStream, Effect.All]): Future[R] = {
     db.run(a.transactionally)
+  }
+
+  /**
+   * Wrapper for doing a read only query.  Override the readOnlyDb to use that
+   * @param a DBIOAction
+   * @tparam R result type
+   * @return result
+   */
+  protected def runQueryFuture[R](a: DBIOAction[R, NoStream, Effect.Read]): Future[R] = {
+    readOnlyDb().run(a)
   }
 
   /**
@@ -50,7 +66,7 @@ trait DAO[T <: DAOTable.Table[V, I, P], V <: IdModel[I], I <: IdType, P <: JdbcP
     extraQueryOps: QueryJoin[A, B] => QueryJoin[A, B] = (query: QueryJoin[A, B]) => query
   ): Future[Seq[(T#TableElementType, A#TableElementType)]]
   = {
-    runTransactionFuture(readJoinAction[A, B, C](other, on, extraQueryOps))
+    runQueryFuture(readJoinAction[A, B, C](other, on, extraQueryOps))
   }
 
   def readJoinTwoFuture[A <: DAOTable.Table[B, C, P], B <: IdModel[C], C <: IdType,
@@ -64,7 +80,7 @@ trait DAO[T <: DAOTable.Table[V, I, P], V <: IdModel[I], I <: IdType, P <: JdbcP
       = (query: QueryJoinTwo[A, B, AA, BB]) => query
   ): Future[Seq[(T#TableElementType, A#TableElementType, AA#TableElementType)]]
   = {
-    runTransactionFuture(readJoinActionTwo[A, B, C, AA, BB, CC](
+    runQueryFuture(readJoinActionTwo[A, B, C, AA, BB, CC](
       otherFirst,
       onFirst,
       otherSecond,
@@ -86,7 +102,7 @@ trait DAO[T <: DAOTable.Table[V, I, P], V <: IdModel[I], I <: IdType, P <: JdbcP
   (other: DAO[A, B, C, P], on: (T, A) => Rep[Option[Boolean]]):
   Future[Seq[(T#TableElementType, Option[A#TableElementType])]]
   = {
-    runTransactionFuture(readLeftJoinAction[A, B, C](other, on))
+    runQueryFuture(readLeftJoinAction[A, B, C](other, on))
   }
 
   /**
@@ -125,7 +141,7 @@ trait DAO[T <: DAOTable.Table[V, I, P], V <: IdModel[I], I <: IdType, P <: JdbcP
     extraQueryOps: (QueryWithFilter)=> QueryWithFilter = (query) => query
   ):
   Future[Seq[Z]] = {
-    runTransactionFuture(readWithChildAction(other, filterChildOn, merge, extraQueryOps))
+   runQueryFuture(readWithChildAction(other, filterChildOn, merge, extraQueryOps))
   }
 
   /**
@@ -134,7 +150,7 @@ trait DAO[T <: DAOTable.Table[V, I, P], V <: IdModel[I], I <: IdType, P <: JdbcP
     * @return future of seq of model
     */
   def readFuture(extraQueryOps: (QueryWithFilter)=> QueryWithFilter = (query) => query): Future[Seq[V]] = {
-    runTransactionFuture(readAction(extraQueryOps))
+    runQueryFuture(readAction(extraQueryOps))
   }
 
   /**
@@ -143,7 +159,7 @@ trait DAO[T <: DAOTable.Table[V, I, P], V <: IdModel[I], I <: IdType, P <: JdbcP
     * @return future of seq of ids
     */
   def readIdsFuture(extraQueryOps: (QueryWithFilter)=> QueryWithFilter = (query) => query): Future[Seq[I]] = {
-    runTransactionFuture(readIdsAction(extraQueryOps))
+    runQueryFuture(readIdsAction(extraQueryOps))
   }
 
   /**
@@ -152,7 +168,7 @@ trait DAO[T <: DAOTable.Table[V, I, P], V <: IdModel[I], I <: IdType, P <: JdbcP
     * @return Future of option of model
     */
   def readByIdFuture(id: I): Future[Option[V]] = {
-    runTransactionFuture(readByIdAction(id))
+    runQueryFuture(readByIdAction(id))
   }
 
   /**
@@ -161,7 +177,7 @@ trait DAO[T <: DAOTable.Table[V, I, P], V <: IdModel[I], I <: IdType, P <: JdbcP
     * @return future of seq of model
     */
   def readByIdFuture(id: Set[I]): Future[Seq[V]] = {
-    runTransactionFuture(readByIdAction(id))
+    runQueryFuture(readByIdAction(id))
   }
 
   /**
@@ -170,7 +186,7 @@ trait DAO[T <: DAOTable.Table[V, I, P], V <: IdModel[I], I <: IdType, P <: JdbcP
     * @return future of model
     */
   def readByIdRequiredFuture(id: I): Future[V] = {
-    runTransactionFuture(readByIdRequiredAction(id))
+    runQueryFuture(readByIdRequiredAction(id))
   }
 
   /**
@@ -179,7 +195,7 @@ trait DAO[T <: DAOTable.Table[V, I, P], V <: IdModel[I], I <: IdType, P <: JdbcP
     * @return future of seq of models
     */
   def readByIdRequiredFuture(id: Set[I]): Future[Seq[V]] = {
-    runTransactionFuture(readByIdRequiredAction(id))
+    runQueryFuture(readByIdRequiredAction(id))
   }
 
   /**
