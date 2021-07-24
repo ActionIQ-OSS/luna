@@ -1,5 +1,5 @@
 ORG = 'com.typesafe.play'
-REV = '2.4.11'
+REV = '2.6.14'
 EXCLUDES = [
   exclude(org='com.fasterxml.jackson.core'),
   exclude(org='com.fasterxml.jackson.module')

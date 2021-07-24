@@ -9,7 +9,7 @@ scala_library(name='luna',
     '3rdparty/io/zipkin/brave:brave',
     '3rdparty/io/zipkin/reporter:zipkin-sender-okhttp3',
   ],
-  sources=rglobs('*.scala'),
+  sources=['**/*.scala'],
   scope='default',
   strict_deps=True,
   provides = scala_artifact(

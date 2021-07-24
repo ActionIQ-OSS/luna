@@ -1,0 +1,159 @@
+# All of the following are seeded with defaults in the config
+#   user: the current user
+#   homedir: the current user's home directory
+#   buildroot: the root of this repo
+#   pants_bootstrapdir: the global pants scratch space primarily used for caches
+#   pants_configdir: the global pants storage for config files
+#   pants_supportdir: pants support files for this repo go here; for example: ivysettings.xml
+#   pants_distdir: user visible artifacts for this repo go here
+#   pants_workdir: the scratch space used to for live builds in this repo
+
+[GLOBAL]
+v1 = true
+verify_config = true
+
+pants_ignore.add = ['/deploy']
+
+binaries_baseurls.add = [
+     'https://binaries.pantsbuild.org'
+  ]
+backend_packages.remove = [
+    'pants.backend.codegen.antlr.java',
+    'pants.backend.codegen.antlr.python',
+    'pants.backend.codegen.jaxb',
+    'pants.backend.codegen.ragel.java',
+    'pants.backend.codegen.wire.java',
+  ]
+
+[DEFAULT]
+# For available versions see https://pypi.python.org/pypi/pantsbuild.pants/. When
+# updating this, update pants-requirements.txt too
+pants_version = "1.30.0"
+print_exception_stacktrace = true
+
+# bump this to invalidate all caches
+cache_key_gen_version = 208
+
+local_cache = "%(pants_workdir)s/local_artifact_cache"
+read_from = ["%(local_cache)s"]
+write_to = ["%(local_cache)s"]
+
+# dont try to clean the cache on each build, compress a lot
+max_entries_per_target = 0
+compression_level = 9
+
+# when offline, dont wait too long for cache
+pinger_timeout = 0.5
+pinger_tries = 1
+
+build_ignore.add = [
+    'metastore_db',
+    'target',
+  ]
+pythonpath = [
+    "%(pants_supportdir)s/pants-plugins",
+  ]
+backend_packages.add = [
+    # plugins from contrib in pants code
+    "repositories",
+  ]
+kill_nailguns = true
+
+[bundle.dup]
+skip = true
+
+[binary.dup]
+skip = true
+
+[bundle.jvm]
+use_basename_prefix = true
+
+
+[cache]
+# see DEFAULT for more settings
+read = true
+write = true
+
+[compile.rsc]
+jvm_options = [
+    '-Dzinc.analysis.cache.limit=1000',
+    '-Xms3g',
+    '-Xmx3g',
+  ]
+args = [
+    '-file-filter', '/\.pants\.d/gen/',
+    '-S-Xmax-classfile-name', '-S254',
+    '-S-language:existentials',
+    '-S-language:implicitConversions',
+    '-S-language:reflectiveCalls',
+  ]
+# compiler_option_sets_enabled_args = """
+# {
+#     'fatal_warnings': [
+#       '-C-Werror',
+#       '-S-Xfatal-warnings',
+#       '-S-deprecation:false',
+#     ],
+#   }
+# """
+warnings = true
+
+[ivy]
+bootstrap_ivy_settings = "%(pants_supportdir)s/ivy/bootstrap-ivysettings.xml"
+ivy_settings = "%(pants_supportdir)s/ivy/ivysettings.xml"
+ivy_profile = "%(pants_supportdir)s/ivy/ivy.xml"
+cache_dir = "%(homedir)s/.ivy2/pants"
+
+[jar-tool]
+jvm_options.add = ['-Xms512m', '-Xmx512m']
+
+[jar-dependency-management]
+default_target = "3rdparty:management"
+conflict_strategy = "USE_MANAGED"
+
+[jvm-platform]
+default_platform = "java8"
+platforms = """
+{
+    'java8': {'source': '8', 'target': '8', 'args': [] },
+}
+"""
+
+[jvm.test.junit]
+options.add = ['-Xms2g', '-Xmx2g', '-Dlogback.configurationFile=test/resources/logback-test.xml']
+
+[scalastyle]
+config = "%(pants_supportdir)s/scalastyle-config.xml"
+
+[scala]
+version = 2.12
+suffix_version = 8
+
+[test.junit]
+allow_empty_sources = false
+failure_summary = true
+use_experimental_runner = true
+default_concurrency = "SERIAL"
+parallel_threads = 0
+per_test_timer = true
+timeouts = true
+timeout_default = 120
+timeout_maximum = 120
+fail_fast = true
+jvm_options.add = ['-Xms2g', '-Xmx2g']
+output_mode = "ALL"
+
+[cache.test.junit]
+ignore = true
+
+[publish.jar]
+ivy_settings = "%(pants_supportdir)s/ivy/ivysettings-publish.xml"
+repos = """
+{
+    'public': { 
+      'resolver': 'oss.sonatype.org',
+      'auth': 'build-support:netrc',
+      'help': 'Sonatype'
+    }
+}
+"""

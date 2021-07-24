@@ -324,7 +324,7 @@ class DAOSpec extends Specification with Mockito {
           updateFutureModel = None
           flushCount = flushCount + 1
         }
-        Unit
+        {}
       })
     val createAndReadFuture = awaitResult(playerDao.createAndReadFuture(input))
     awaitResult(playerDao.updateFuture(input.copy(name="Zarry")))
@@ -359,7 +359,7 @@ class DAOSpec extends Specification with Mockito {
         updateFutureModel = None
         flushCount = flushCount + 1
       }
-      Unit
+      {}
     })
     awaitResult(playerDao.createAndUpdate(input))
     createModel must beNone
