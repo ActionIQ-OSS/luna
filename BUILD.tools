@@ -1,5 +1,1 @@
 # Target definitions for tools used by pants
-
-alias(name='scala-compiler', target='3rdparty/org/scala-lang:scala-compiler-tool')
-alias(name='scala-library', target='3rdparty/org/scala-lang:scala-library-tool')
-
