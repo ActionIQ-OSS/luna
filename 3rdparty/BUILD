@@ -2,8 +2,6 @@
 managed_jar_dependencies(
   name='management',
   artifacts=[
-    '3rdparty/org/scala-lang:scala-compiler',
-    '3rdparty/org/scala-lang:scala-library',
   ],
 )
 REV_MYSQL = '5.1.41'
