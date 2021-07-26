@@ -27,7 +27,7 @@ trait DAO[T <: DAOTable.Table[V, I, P], V <: IdModel[I], I <: IdType, P <: JdbcP
    * A way to specify a read only db
    * @return read only db, by default current db
    */
-  protected def readOnlyDb(): DBWithLogging = db
+  protected def readOnlyDb: DBWithLogging = db
 
   /**
     * Wrapper for running a trx.... SOON WE CAN PUT SOME AUDIT LOGGING IN
@@ -46,7 +46,7 @@ trait DAO[T <: DAOTable.Table[V, I, P], V <: IdModel[I], I <: IdType, P <: JdbcP
    * @return result
    */
   protected def runQueryFuture[R](a: DBIOAction[R, NoStream, Effect.Read]): Future[R] = {
-    readOnlyDb().run(a)
+    readOnlyDb.run(a)
   }
 
   /**
