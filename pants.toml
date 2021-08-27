@@ -126,7 +126,7 @@ options.add = ['-Xms2g', '-Xmx2g', '-Dlogback.configurationFile=test/resources/l
 config = "%(pants_supportdir)s/scalastyle-config.xml"
 
 [scala]
-version = 2.11
+version = 2.12
 suffix_version = 14
 
 [test.junit]
