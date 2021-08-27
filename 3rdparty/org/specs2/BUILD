@@ -1,5 +1,5 @@
 ORG = 'org.specs2'
-REV = '3.6.6'
+REV = '4.6.0'
 
 def make_lib(name):
   jar_library(name=name,

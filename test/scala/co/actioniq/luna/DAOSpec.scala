@@ -299,7 +299,7 @@ class DAOSpec extends Specification with Mockito {
     var updateFutureModel: Option[LoggingModel] = None
     var deleteModel: Option[LoggingModel] = None
     var flushCount = 0
-      tl.write(any[LoggingModel]) answers(input => {
+      tl.write(any[LoggingModel]) answers{ input: Any =>
         val model = input.asInstanceOf[LoggingModel]
         if (model.action == TransactionAction.create){
           createModel = Some(model)
@@ -308,8 +308,8 @@ class DAOSpec extends Specification with Mockito {
         } else if (model.action == TransactionAction.delete){
           deleteModel = Some(model)
         }
-      })
-      tl.flush() answers (v =>{
+      }
+      tl.flush() answers {v: Any =>
         if (flushCount == 0) {
           createModel must beSome
           createModel.get.id mustEqual input.id
@@ -324,8 +324,8 @@ class DAOSpec extends Specification with Mockito {
           updateFutureModel = None
           flushCount = flushCount + 1
         }
-        Unit
-      })
+        {}
+      }
     val createAndReadFuture = awaitResult(playerDao.createAndReadFuture(input))
     awaitResult(playerDao.updateFuture(input.copy(name="Zarry")))
     awaitResult(playerDao.deleteFuture(createAndReadFuture.id))
@@ -341,15 +341,15 @@ class DAOSpec extends Specification with Mockito {
     var createModel: Option[LoggingModel] = None
     var updateFutureModel: Option[LoggingModel] = None
     var flushCount = 0
-    tl.write(any[LoggingModel]) answers(input => {
+    tl.write(any[LoggingModel]) answers{input: Any =>
       val model = input.asInstanceOf[LoggingModel]
       if (model.action == TransactionAction.create){
         createModel = Some(model)
       } else if (model.action == TransactionAction.update) {
         updateFutureModel = Some(model)
       }
-    })
-    tl.flush() answers (v =>{
+    }
+    tl.flush() answers {v: Any =>
       if (flushCount == 0) {
         createModel must beSome
         createModel.get.id mustEqual input.id
@@ -359,8 +359,8 @@ class DAOSpec extends Specification with Mockito {
         updateFutureModel = None
         flushCount = flushCount + 1
       }
-      Unit
-    })
+      {}
+    }
     awaitResult(playerDao.createAndUpdate(input))
     createModel must beNone
     updateFutureModel must beNone
