@@ -2,5 +2,5 @@ resources(
   name='resources',
   dependencies=[
   ],
-  sources=['**/*'],
+  sources=['*'],
 )
